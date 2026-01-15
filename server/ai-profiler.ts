@@ -1,6 +1,7 @@
 /**
- * AI-powered User Profiling with Redis Caching
- * Uses Grok (X.AI) to analyze user data and infer profile
+ * Perfil de Usuário com IA e Cache Redis
+ * Usa Grok (X.AI) para analisar dados do usuário e inferir perfil
+ * Desenvolvido por Grupo Murad - 2026
  */
 
 import { createClient, type RedisClientType } from 'redis';
@@ -16,15 +17,15 @@ const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MIMO_MODEL = 'xiaomi/mimo-v2-flash:free';
 
 if (GROK_API_KEY) {
-  console.log('Grok AI initialized (primary)');
+  console.log('Grok AI inicializado (primário)');
 } else {
-  console.warn('GROK_API_KEY not set - Grok AI disabled');
+  console.warn('GROK_API_KEY não definido - Grok AI desabilitado');
 }
 
 if (OPENROUTER_API_KEY) {
-  console.log('OpenRouter MiMo initialized (fallback)');
+  console.log('OpenRouter MiMo inicializado (fallback)');
 } else {
-  console.warn('OPENROUTER_API_KEY not set - MiMo fallback disabled');
+  console.warn('OPENROUTER_API_KEY não definido - Fallback MiMo desabilitado');
 }
 
 // Initialize Redis clients (separate for caching and tracking)
@@ -80,12 +81,12 @@ async function getRedis(): Promise<RedisClientType | null> {
     });
 
     await redis.connect();
-    console.log('Redis connected:', REDIS_URL);
+    console.log('Redis conectado:', REDIS_URL);
     redisConnecting = false;
     redisLastError = 0;
     return redis;
   } catch (err) {
-    console.error('Redis connection failed:', (err as Error).message);
+    console.error('Falha na conexão Redis:', (err as Error).message);
     redisConnecting = false;
     redisLastError = Date.now();
     redis = null;
@@ -112,12 +113,12 @@ async function getTrackingRedis(): Promise<RedisClientType | null> {
     });
 
     await trackingRedis.connect();
-    console.log('Redis tracking connected');
+    console.log('Redis de rastreamento conectado');
     trackingRedisConnecting = false;
     trackingRedisLastError = 0;
     return trackingRedis;
   } catch (err) {
-    console.error('Redis tracking connection failed:', (err as Error).message);
+    console.error('Falha na conexão Redis de rastreamento:', (err as Error).message);
     trackingRedisConnecting = false;
     trackingRedisLastError = Date.now();
     trackingRedis = null;
@@ -165,7 +166,7 @@ function checkRateLimit(userId: string): boolean {
  * Generate a cache key from fingerprint data
  */
 function getCacheKey(fingerprintId: string, crossBrowserId: string): string {
-  return `yourinfo:profile:${fingerprintId}:${crossBrowserId}`;
+  return `youare:profile:${fingerprintId}:${crossBrowserId}`;
 }
 
 /**
@@ -178,7 +179,7 @@ async function getCachedProfile(cacheKey: string): Promise<UserProfile | null> {
 
     const cached = await client.get(cacheKey);
     if (cached) {
-      console.log('Cache hit for profile:', cacheKey);
+      console.log('Cache hit para perfil:', cacheKey);
       return JSON.parse(cached);
     }
     return null;
@@ -197,7 +198,7 @@ async function cacheProfile(cacheKey: string, profile: UserProfile): Promise<voi
     if (!client) return;
 
     await client.setEx(cacheKey, CACHE_TTL, JSON.stringify(profile));
-    console.log('Cached profile:', cacheKey);
+    console.log('Perfil em cache:', cacheKey);
   } catch (err) {
     console.error('Redis set error:', err);
   }
@@ -775,7 +776,7 @@ export async function generateAIProfile(clientInfo: Partial<ClientInfo>, geo?: G
 
   // If no AI available at all, use rule-based fallback
   if (!GROK_API_KEY && !OPENROUTER_API_KEY) {
-    console.log('No AI configured - using rule-based fallback');
+    console.log('Nenhuma IA configurada - usando fallback baseado em regras');
     const fallbackProfile = generateFallbackProfile(clientInfo, geo);
     return { profile: fallbackProfile, source: 'fallback', error: 'No AI configured' };
   }
@@ -783,7 +784,7 @@ export async function generateAIProfile(clientInfo: Partial<ClientInfo>, geo?: G
   // Check rate limit (per user)
   const userId = `${fingerprintId}:${crossBrowserId}`;
   if (!checkRateLimit(userId)) {
-    console.log(`Rate limited user ${userId} - using rule-based fallback`);
+    console.log(`Usuário ${userId} com limite de taxa atingido - usando fallback baseado em regras`);
     const fallbackProfile = generateFallbackProfile(clientInfo, geo);
     return { profile: fallbackProfile, source: 'fallback', error: 'Rate limited' };
   }
@@ -798,14 +799,14 @@ export async function generateAIProfile(clientInfo: Partial<ClientInfo>, geo?: G
     }
 
     try {
-      console.log('Attempting MiMo fallback via OpenRouter...');
+      console.log('Tentando fallback MiMo via OpenRouter...');
       const mimoResponse = await fetch(OPENROUTER_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://yourinfo.hsingh.app',
-          'X-Title': 'YourInfo Privacy Demo',
+          'HTTP-Referer': 'https://youare.grupomurad.com',
+          'X-Title': 'YouAre - Demonstração de Privacidade',
         },
         body: JSON.stringify({
           model: MIMO_MODEL,
@@ -834,7 +835,7 @@ export async function generateAIProfile(clientInfo: Partial<ClientInfo>, geo?: G
 
       const mimoProfile = parseAIResponse(mimoText);
       if (mimoProfile) {
-        console.log('MiMo profile generated successfully');
+        console.log('Perfil MiMo gerado com sucesso');
         (mimoProfile as UserProfile & { aiGenerated: boolean; aiSource: string }).aiGenerated = true;
         (mimoProfile as UserProfile & { aiSource: string }).aiSource = 'mimo';
         return { profile: mimoProfile };
@@ -849,7 +850,7 @@ export async function generateAIProfile(clientInfo: Partial<ClientInfo>, geo?: G
 
   // If Grok is not configured, go straight to MiMo
   if (!GROK_API_KEY) {
-    console.log('Grok not configured, using MiMo directly...');
+    console.log('Grok não configurado, usando MiMo diretamente...');
     const mimoResult = await tryMiMo();
     if (mimoResult.profile) {
       await cacheProfile(cacheKey, mimoResult.profile);
@@ -961,7 +962,7 @@ export async function closeRedis(): Promise<void> {
 }
 
 // Unique visitors tracking key
-const UNIQUE_VISITORS_KEY = 'yourinfo:unique_visitors';
+const UNIQUE_VISITORS_KEY = 'youare:unique_visitors';
 
 /**
  * Track a unique visitor by fingerprint with retry logic
@@ -1158,7 +1159,7 @@ async function getAuctionCache(cacheKey: string): Promise<AIAuctionResult | null
 
     const cached = await client.get(cacheKey);
     if (cached) {
-      console.log('Cache hit for auction:', cacheKey);
+      console.log('Cache hit para leilão:', cacheKey);
       return JSON.parse(cached);
     }
   } catch (err) {
@@ -1173,7 +1174,7 @@ async function setAuctionCache(cacheKey: string, result: AIAuctionResult): Promi
     if (!client) return;
 
     await client.setEx(cacheKey, AUCTION_CACHE_TTL, JSON.stringify(result));
-    console.log('Cached auction:', cacheKey);
+    console.log('Leilão em cache:', cacheKey);
   } catch (err) {
     console.error('Redis auction cache set error:', err);
   }
@@ -1186,7 +1187,7 @@ export async function generateAIAuction(
 ): Promise<AIAuctionResult> {
   // Create cache key from profile summary hash + country
   const profileHash = Buffer.from(profileSummary).toString('base64').slice(0, 32);
-  const cacheKey = `yourinfo:auction:${profileHash}:${countryCode}`;
+  const cacheKey = `youare:auction:${profileHash}:${countryCode}`;
 
   // Check cache first
   const cached = await getAuctionCache(cacheKey);
@@ -1202,14 +1203,14 @@ export async function generateAIAuction(
     if (!OPENROUTER_API_KEY) return null;
 
     try {
-      console.log('AI Auction: Trying MiMo...');
+      console.log('Leilão IA: Tentando MiMo...');
       const response = await fetch(OPENROUTER_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://yourinfo.hsingh.app',
-          'X-Title': 'YourInfo Privacy Demo',
+          'HTTP-Referer': 'https://youare.grupomurad.com',
+          'X-Title': 'YouAre - Demonstração de Privacidade',
         },
         body: JSON.stringify({
           model: MIMO_MODEL,
@@ -1269,7 +1270,7 @@ export async function generateAIAuction(
         if (text) {
           const result = parseAuctionResponse(text);
           if (result) {
-            console.log('AI Auction: Grok success');
+            console.log('Leilão IA: Grok sucesso');
             result.source = 'grok';
             await setAuctionCache(cacheKey, result);
             return result;
@@ -1285,13 +1286,13 @@ export async function generateAIAuction(
   // Try MiMo fallback
   const mimoResult = await tryMiMo();
   if (mimoResult) {
-    console.log('AI Auction: MiMo success');
+    console.log('Leilão IA: MiMo sucesso');
     await setAuctionCache(cacheKey, mimoResult);
     return mimoResult;
   }
 
   // Final fallback - return empty result (frontend will use calculated fallback)
-  console.log('AI Auction: All AI failed, returning fallback signal');
+  console.log('Leilão IA: Todas as IAs falharam, retornando sinal de fallback');
   return {
     bids: [],
     valueFactors: [],

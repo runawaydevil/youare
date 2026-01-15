@@ -1,6 +1,6 @@
 /**
- * Info Panel component
- * Displays gathered information about the visitor in categorized sections
+ * Componente de Painel de Informações
+ * Exibe informações coletadas sobre o visitante em seções categorizadas
  */
 
 import type { VisitorInfo } from '../types';
@@ -26,8 +26,8 @@ function InfoRow({ label, value, tooltip, warning }: InfoRowProps) {
       ? 'N/A'
       : typeof value === 'boolean'
         ? value
-          ? 'Yes'
-          : 'No'
+          ? 'Sim'
+          : 'Não'
         : String(value);
 
   return (
@@ -101,10 +101,10 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
     return (
       <div className="info-panel">
         <div className="info-panel-header">
-          <h2>Your Information</h2>
+          <h2>Suas Informações</h2>
         </div>
         <div className="info-panel-content">
-          <p className="loading-message">Connecting...</p>
+          <p className="loading-message">Conectando...</p>
         </div>
       </div>
     );
@@ -115,73 +115,73 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
   return (
     <div className="info-panel">
       <div className="info-panel-header">
-        <h2>{isCurrentUser ? 'Your Information' : 'Visitor Info'}</h2>
+        <h2>{isCurrentUser ? 'Suas Informações' : 'Informações do Visitante'}</h2>
         {!isCurrentUser && onClose && (
           <button className="close-button" onClick={onClose}>
             x
           </button>
         )}
-        {isCurrentUser && <span className="you-badge">You</span>}
+        {isCurrentUser && <span className="you-badge">Você</span>}
       </div>
 
       <div className="info-panel-content">
         {/* Privacy notice for other visitors */}
         {!isCurrentUser && (
           <div className="privacy-notice">
-            Some data is hidden to protect this visitor's privacy. Location on map and coordinates are approximate (~100km).
+            Alguns dados estão ocultos para proteger a privacidade deste visitante. Localização no mapa e coordenadas são aproximadas (~100km).
           </div>
         )}
 
         {/* Unique Fingerprint ID - Show at top! */}
         {client && (
-          <InfoSection title="Your Unique IDs" icon="!">
+          <InfoSection title="Seus IDs Únicos" icon="!">
             <InfoRow
-              label="Browser Fingerprint"
+              label="Impressão Digital do Navegador"
               value={client.fingerprintId}
-              tooltip="Unique to this browser - changes if you switch browsers"
+              tooltip="Único para este navegador - muda se você trocar de navegador"
               warning
             />
             <InfoRow
-              label="Cross-Browser ID"
+              label="ID Cross-Browser"
               value={client.crossBrowserId}
-              tooltip="SAME across Chrome, Firefox, Safari! Based on hardware."
+              tooltip="MESMO ID no Chrome, Firefox, Safari! Baseado em hardware."
               warning
             />
             <InfoRow
-              label="Confidence"
+              label="Confiança"
               value={`${client.fingerprintConfidence}%`}
-              tooltip="How confident we are this ID is unique to you"
+              tooltip="Quão confiantes estamos de que este ID é único para você"
             />
           </InfoSection>
         )}
 
         {/* Location Section - Second! */}
-        <InfoSection title="Location" icon="O">
+        <InfoSection title="Localização" icon="O">
           <InfoRow
-            label="IP Address"
+            label="Endereço IP"
             value={server.ip}
-            tooltip="Your public IP address visible to every website"
+            tooltip="Seu endereço IP público visível para todos os sites"
             warning={isCurrentUser}
           />
           {server.geo && (
             <>
-              <InfoRow label="City" value={server.geo.city} />
-              <InfoRow label="Region" value={server.geo.region} />
-              <InfoRow label="Country" value={`${server.geo.country} (${server.geo.countryCode})`} />
+              <InfoRow label="Cidade" value={server.geo.city} />
+              <InfoRow label="Região" value={server.geo.region} />
+              <InfoRow label="País" value={`${server.geo.country} (${server.geo.countryCode})`} />
               <InfoRow
-                label="Coordinates"
+                label="Coordenadas"
                 value={isCurrentUser
                   ? `${server.geo.lat.toFixed(4)}, ${server.geo.lng.toFixed(4)}`
-                  : `~${Math.round(server.geo.lat)}, ${Math.round(server.geo.lng)} (APPROX)`
+                  : `~${Math.round(server.geo.lat)}, ${Math.round(server.geo.lng)} (APROX)`
                 }
-                tooltip={isCurrentUser ? undefined : "Approximate location for privacy (~100km)"}
+                tooltip={isCurrentUser ? undefined : "Localização aproximada para privacidade (~100km)"}
                 warning={isCurrentUser}
               />
-              <InfoRow label="Timezone" value={server.geo.timezone} />
+              <InfoRow label="Fuso Horário" value={server.geo.timezone} />
               {isCurrentUser && (
                 <>
-                  <InfoRow label="ISP" value={server.geo.isp} tooltip="Your Internet Service Provider" />
-                  <InfoRow label="Organization" value={server.geo.org} />
+                  <InfoRow label="ISP" value={server.geo.isp} tooltip="Seu Provedor de Serviços de Internet" />
+                  <InfoRow label="Organização" value={server.geo.org} />
                 </>
               )}
             </>
@@ -190,65 +190,65 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* User Profile - What advertisers think about you */}
         {client && (
-          <InfoSection title={client.userProfile.aiGenerated ? "AI Analysis of You" : "What Advertisers Know About You"} icon="$">
+          <InfoSection title={client.userProfile.aiGenerated ? "Análise de IA Sobre Você" : "O Que os Anunciantes Sabem Sobre Você"} icon="$">
             <InfoRow
-              label="Human Score"
+              label="Pontuação Humana"
               value={`${client.userProfile.humanScore}%`}
-              tooltip="How confident we are you're human"
+              tooltip="Quão confiantes estamos de que você é humano"
               warning={client.userProfile.humanScore < 70}
             />
             <InfoRow
-              label="Fraud Risk"
+              label="Risco de Fraude"
               value={`${client.userProfile.fraudRiskScore}%`}
-              tooltip="Risk score used by payment processors"
+              tooltip="Pontuação de risco usada por processadores de pagamento"
               warning={client.userProfile.fraudRiskScore > 30}
             />
             <InfoRow
-              label="Device Tier"
+              label="Nível do Dispositivo"
               value={client.userProfile.deviceTier}
-              tooltip="Used to determine your spending power"
+              tooltip="Usado para determinar seu poder de compra"
             />
             <InfoRow
-              label="Device Value"
+              label="Valor do Dispositivo"
               value={client.userProfile.estimatedDeviceValue}
-              tooltip="Estimated value of your device"
+              tooltip="Valor estimado do seu dispositivo"
               warning
             />
             <InfoRow
-              label="Device Age"
+              label="Idade do Dispositivo"
               value={client.userProfile.deviceAge}
             />
             <InfoRow
-              label="Country"
+              label="País"
               value={client.userProfile.likelyCountry}
             />
             {client.userProfile.incomeLevel && (
               <InfoRow
-                label="Income Level"
+                label="Nível de Renda"
                 value={client.userProfile.incomeLevel}
-                tooltip="Inferred from device and browsing patterns"
+                tooltip="Inferido a partir do dispositivo e padrões de navegação"
                 warning
               />
             )}
             {client.userProfile.ageRange && (
               <InfoRow
-                label="Age Range"
+                label="Faixa Etária"
                 value={client.userProfile.ageRange}
-                tooltip="Estimated age based on device and preferences"
+                tooltip="Idade estimada baseada no dispositivo e preferências"
                 warning
               />
             )}
             {client.userProfile.occupation && (
               <InfoRow
-                label="Occupation"
+                label="Ocupação"
                 value={client.userProfile.occupation}
-                tooltip="Best guess based on tools and patterns"
+                tooltip="Melhor estimativa baseada em ferramentas e padrões"
                 warning
               />
             )}
             {client.userProfile.educationLevel && client.userProfile.educationLevel !== 'unknown' && (
               <InfoRow
-                label="Education"
+                label="Educação"
                 value={client.userProfile.educationLevel}
                 tooltip={client.userProfile.educationReason}
                 warning
@@ -256,7 +256,7 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
             )}
             {client.userProfile.workStyle && (
               <InfoRow
-                label="Work Style"
+                label="Estilo de Trabalho"
                 value={client.userProfile.workStyle}
                 tooltip={client.userProfile.workReason}
                 warning
@@ -264,7 +264,7 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
             )}
             {client.userProfile.lifeSituation && (
               <InfoRow
-                label="Life Situation"
+                label="Situação de Vida"
                 value={client.userProfile.lifeSituation}
                 warning
               />
@@ -274,11 +274,11 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Creepy Personal Life Inferences */}
         {client && (aiLoading || client.userProfile.aiGenerated) && (
-          <InfoSection title="Your Personal Life (AI Guesses)" icon="!">
+          <InfoSection title="Sua Vida Pessoal (Palpites da IA)" icon="!">
             {aiLoading && !client.userProfile.aiGenerated && <LoadingSkeleton />}
             {client.userProfile.relationshipStatus && client.userProfile.relationshipStatus !== 'unknown' && (
               <InfoRow
-                label="Relationship"
+                label="Relacionamento"
                 value={client.userProfile.relationshipStatus}
                 tooltip={client.userProfile.relationshipReason}
                 warning
@@ -286,37 +286,37 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
             )}
             {client.userProfile.likelyParent !== undefined && (
               <InfoRow
-                label="Parent"
-                value={client.userProfile.likelyParent ? 'Likely yes' : 'Probably not'}
+                label="Pai/Mãe"
+                value={client.userProfile.likelyParent ? 'Provavelmente sim' : 'Provavelmente não'}
                 tooltip={client.userProfile.parentReason}
                 warning={client.userProfile.likelyParent}
               />
             )}
             {client.userProfile.petOwner !== undefined && (
               <InfoRow
-                label="Pet Owner"
-                value={client.userProfile.petOwner ? (client.userProfile.petType || 'Yes') : 'No'}
+                label="Dono de Pet"
+                value={client.userProfile.petOwner ? (client.userProfile.petType || 'Sim') : 'Não'}
                 warning={client.userProfile.petOwner}
               />
             )}
             {client.userProfile.homeowner !== undefined && (
               <InfoRow
-                label="Homeowner"
-                value={client.userProfile.homeowner ? 'Likely yes' : 'Renter'}
+                label="Proprietário"
+                value={client.userProfile.homeowner ? 'Provavelmente sim' : 'Inquilino'}
                 tooltip={client.userProfile.homeReason}
                 warning
               />
             )}
             {client.userProfile.carOwner !== undefined && (
               <InfoRow
-                label="Car Owner"
-                value={client.userProfile.carOwner ? (client.userProfile.carType || 'Yes') : 'No'}
+                label="Dono de Carro"
+                value={client.userProfile.carOwner ? (client.userProfile.carType || 'Sim') : 'Não'}
                 warning={client.userProfile.carOwner}
               />
             )}
             {client.userProfile.socialLife && (
               <InfoRow
-                label="Social Type"
+                label="Tipo Social"
                 value={client.userProfile.socialLife}
                 tooltip={client.userProfile.socialReason}
                 warning
@@ -327,11 +327,11 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Mental & Physical State */}
         {client && (aiLoading || client.userProfile.aiGenerated) && (
-          <InfoSection title="Your Mental & Physical State" icon="H">
+          <InfoSection title="Seu Estado Mental e Físico" icon="H">
             {aiLoading && !client.userProfile.aiGenerated && <LoadingSkeleton />}
             {client.userProfile.stressLevel && (
               <InfoRow
-                label="Stress Level"
+                label="Nível de Estresse"
                 value={client.userProfile.stressLevel}
                 tooltip={client.userProfile.stressReason}
                 warning={client.userProfile.stressLevel === 'high' || client.userProfile.stressLevel === 'burnout'}
@@ -339,7 +339,7 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
             )}
             {client.userProfile.sleepSchedule && (
               <InfoRow
-                label="Sleep Schedule"
+                label="Horário de Sono"
                 value={client.userProfile.sleepSchedule}
                 tooltip={client.userProfile.sleepReason}
                 warning
@@ -347,7 +347,7 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
             )}
             {client.userProfile.fitnessLevel && (
               <InfoRow
-                label="Fitness Level"
+                label="Nível de Condicionamento"
                 value={client.userProfile.fitnessLevel}
                 tooltip={client.userProfile.fitnessReason}
                 warning
@@ -355,14 +355,14 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
             )}
             {client.userProfile.healthConscious !== undefined && (
               <InfoRow
-                label="Health Conscious"
-                value={client.userProfile.healthConscious ? 'Yes' : 'Not really'}
+                label="Consciente da Saúde"
+                value={client.userProfile.healthConscious ? 'Sim' : 'Não muito'}
                 tooltip={client.userProfile.healthReason}
               />
             )}
             {client.userProfile.dietaryPreference && (
               <InfoRow
-                label="Diet"
+                label="Dieta"
                 value={client.userProfile.dietaryPreference}
                 warning
               />
@@ -372,31 +372,31 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Lifestyle & Habits */}
         {client && (aiLoading || client.userProfile.aiGenerated) && (
-          <InfoSection title="Your Lifestyle & Habits" icon="L">
+          <InfoSection title="Seu Estilo de Vida e Hábitos" icon="L">
             {aiLoading && !client.userProfile.aiGenerated && <LoadingSkeleton />}
             {client.userProfile.coffeeOrTea && (
               <InfoRow
-                label="Caffeine"
-                value={client.userProfile.coffeeOrTea === 'coffee' ? 'Coffee person' : client.userProfile.coffeeOrTea === 'tea' ? 'Tea person' : client.userProfile.coffeeOrTea}
+                label="Cafeína"
+                value={client.userProfile.coffeeOrTea === 'coffee' ? 'Pessoa do café' : client.userProfile.coffeeOrTea === 'tea' ? 'Pessoa do chá' : client.userProfile.coffeeOrTea}
                 warning
               />
             )}
             {client.userProfile.drinksAlcohol !== undefined && (
               <InfoRow
-                label="Drinks Alcohol"
-                value={client.userProfile.drinksAlcohol ? 'Probably' : 'Unlikely'}
+                label="Bebe Álcool"
+                value={client.userProfile.drinksAlcohol ? 'Provavelmente' : 'Improvável'}
               />
             )}
             {client.userProfile.smokes !== undefined && (
               <InfoRow
-                label="Smokes"
-                value={client.userProfile.smokes ? 'Possibly' : 'Unlikely'}
+                label="Fuma"
+                value={client.userProfile.smokes ? 'Possivelmente' : 'Improvável'}
                 warning={client.userProfile.smokes}
               />
             )}
             {client.userProfile.travelFrequency && (
               <InfoRow
-                label="Travel"
+                label="Viagens"
                 value={client.userProfile.travelFrequency}
                 tooltip={client.userProfile.travelReason}
               />
@@ -406,11 +406,11 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Financial & Shopping */}
         {client && (aiLoading || client.userProfile.aiGenerated) && (
-          <InfoSection title="Your Financial Profile" icon="$">
+          <InfoSection title="Seu Perfil Financeiro" icon="$">
             {aiLoading && !client.userProfile.aiGenerated && <LoadingSkeleton />}
             {client.userProfile.financialHealth && (
               <InfoRow
-                label="Financial Health"
+                label="Saúde Financeira"
                 value={client.userProfile.financialHealth}
                 tooltip={client.userProfile.financialReason}
                 warning
@@ -418,7 +418,7 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
             )}
             {client.userProfile.shoppingHabits && (
               <InfoRow
-                label="Shopping Style"
+                label="Estilo de Compras"
                 value={client.userProfile.shoppingHabits}
                 tooltip={client.userProfile.shoppingReason}
                 warning
@@ -426,7 +426,7 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
             )}
             {client.userProfile.brandPreference && client.userProfile.brandPreference.length > 0 && (
               <InfoRow
-                label="Brand Affinity"
+                label="Afinidade com Marcas"
                 value={client.userProfile.brandPreference.slice(0, 3).join(', ')}
                 warning
               />
@@ -436,7 +436,7 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Entertainment & Media */}
         {client && (aiLoading || (client.userProfile.aiGenerated && (client.userProfile.streamingServices?.length || client.userProfile.musicTaste?.length))) && (
-          <InfoSection title="Your Entertainment" icon="E">
+          <InfoSection title="Seu Entretenimento" icon="E">
             {aiLoading && !client.userProfile.aiGenerated && <LoadingSkeleton />}
             {client.userProfile.streamingServices && client.userProfile.streamingServices.length > 0 && (
               <InfoRow
@@ -447,7 +447,7 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
             )}
             {client.userProfile.musicTaste && client.userProfile.musicTaste.length > 0 && (
               <InfoRow
-                label="Music Taste"
+                label="Gosto Musical"
                 value={client.userProfile.musicTaste.join(', ')}
                 warning
               />
@@ -457,18 +457,18 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Life Events */}
         {client && client.userProfile.lifeEvents && client.userProfile.lifeEvents.length > 0 && (
-          <InfoSection title="Recent Life Events" icon="!">
+          <InfoSection title="Eventos Recentes da Vida" icon="!">
             {client.userProfile.lifeEvents.map((event) => (
-              <InfoRow key={event} label={event} value="Detected" warning />
+              <InfoRow key={event} label={event} value="Detectado" warning />
             ))}
           </InfoSection>
         )}
 
         {/* Political (if detected) */}
         {client && client.userProfile.politicalLeaning && client.userProfile.politicalLeaning !== 'unknown' && (
-          <InfoSection title="Political Inference" icon="P">
+          <InfoSection title="Inferência Política" icon="P">
             <InfoRow
-              label="Leaning"
+              label="Tendência"
               value={client.userProfile.politicalLeaning}
               tooltip={client.userProfile.politicalReason}
               warning
@@ -478,7 +478,7 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Creepy Insights Summary */}
         {client && client.userProfile.creepyInsights && client.userProfile.creepyInsights.length > 0 && (
-          <InfoSection title="Other Creepy Insights" icon="!">
+          <InfoSection title="Outros Insights Perturbadores" icon="!">
             {client.userProfile.creepyInsights.map((insight, i) => (
               <InfoRow key={i} label={`Insight ${i + 1}`} value={insight} warning />
             ))}
@@ -487,46 +487,46 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* User Type Detection */}
         {client && (
-          <InfoSection title="Who They Think You Are" icon="U">
+          <InfoSection title="Quem Eles Acham Que Você É" icon="U">
             <InfoRow
-              label="Developer"
-              value={client.userProfile.likelyDeveloper ? `Yes (${client.userProfile.developerScore}%)` : `No (${client.userProfile.developerScore}%)`}
+              label="Desenvolvedor"
+              value={client.userProfile.likelyDeveloper ? `Sim (${client.userProfile.developerScore}%)` : `Não (${client.userProfile.developerScore}%)`}
               tooltip={client.userProfile.developerReason}
               warning={client.userProfile.likelyDeveloper}
             />
             <InfoRow
               label="Gamer"
-              value={client.userProfile.likelyGamer ? `Yes (${client.userProfile.gamerScore}%)` : `No (${client.userProfile.gamerScore}%)`}
+              value={client.userProfile.likelyGamer ? `Sim (${client.userProfile.gamerScore}%)` : `Não (${client.userProfile.gamerScore}%)`}
               tooltip={client.userProfile.gamerReason}
               warning={client.userProfile.likelyGamer}
             />
             <InfoRow
               label="Designer"
-              value={client.userProfile.likelyDesigner ? `Yes (${client.userProfile.designerScore}%)` : `No (${client.userProfile.designerScore}%)`}
+              value={client.userProfile.likelyDesigner ? `Sim (${client.userProfile.designerScore}%)` : `Não (${client.userProfile.designerScore}%)`}
               tooltip={client.userProfile.designerReason}
               warning={client.userProfile.likelyDesigner}
             />
             <InfoRow
-              label="Power User"
-              value={client.userProfile.likelyPowerUser ? `Yes (${client.userProfile.powerUserScore}%)` : `No (${client.userProfile.powerUserScore}%)`}
+              label="Usuário Avançado"
+              value={client.userProfile.likelyPowerUser ? `Sim (${client.userProfile.powerUserScore}%)` : `Não (${client.userProfile.powerUserScore}%)`}
               tooltip={client.userProfile.powerUserReason}
               warning={client.userProfile.likelyPowerUser}
             />
             <InfoRow
-              label="Privacy Conscious"
-              value={client.userProfile.privacyConscious ? `Yes (${client.userProfile.privacyScore}%)` : `No (${client.userProfile.privacyScore}%)`}
+              label="Consciente da Privacidade"
+              value={client.userProfile.privacyConscious ? `Sim (${client.userProfile.privacyScore}%)` : `Não (${client.userProfile.privacyScore}%)`}
               tooltip={client.userProfile.privacyReason}
             />
             <InfoRow
-              label="Tech Savvy"
+              label="Entusiasta de Tecnologia"
               value={client.userProfile.likelyTechSavvy}
             />
             <InfoRow
-              label="Mobile User"
+              label="Usuário Mobile"
               value={client.userProfile.likelyMobile}
             />
             <InfoRow
-              label="Work Device"
+              label="Dispositivo de Trabalho"
               value={client.userProfile.likelyWorkDevice}
             />
           </InfoSection>
@@ -534,45 +534,45 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Personality Traits (AI only) */}
         {client && client.userProfile.personalityTraits && client.userProfile.personalityTraits.length > 0 && (
-          <InfoSection title="Personality Traits" icon="P">
+          <InfoSection title="Traços de Personalidade" icon="P">
             {client.userProfile.personalityTraits.map((trait) => (
-              <InfoRow key={trait} label={trait} value="Detected" warning />
+              <InfoRow key={trait} label={trait} value="Detectado" warning />
             ))}
           </InfoSection>
         )}
 
         {/* Inferred Interests */}
         {client && client.userProfile.inferredInterests.length > 0 && (
-          <InfoSection title="Inferred Interests" icon="*">
+          <InfoSection title="Interesses Inferidos" icon="*">
             {client.userProfile.inferredInterests.map((interest) => (
-              <InfoRow key={interest} label={interest} value="Likely interested" warning />
+              <InfoRow key={interest} label={interest} value="Provavelmente interessado" warning />
             ))}
           </InfoSection>
         )}
 
         {/* Bot Indicators */}
         {client && client.userProfile.botIndicators.length > 0 && (
-          <InfoSection title="Bot Detection Flags" icon="!">
+          <InfoSection title="Sinalizadores de Detecção de Bot" icon="!">
             {client.userProfile.botIndicators.map((indicator) => (
-              <InfoRow key={indicator} label={indicator} value="Detected" warning />
+              <InfoRow key={indicator} label={indicator} value="Detectado" warning />
             ))}
           </InfoSection>
         )}
 
         {/* Fraud Indicators */}
         {client && client.userProfile.fraudIndicators.length > 0 && (
-          <InfoSection title="Fraud Risk Factors" icon="!">
+          <InfoSection title="Fatores de Risco de Fraude" icon="!">
             {client.userProfile.fraudIndicators.map((indicator) => (
-              <InfoRow key={indicator} label={indicator} value="Flagged" warning />
+              <InfoRow key={indicator} label={indicator} value="Sinalizado" warning />
             ))}
           </InfoSection>
         )}
 
         {/* Cross-Browser Tracking Factors */}
         {client && client.crossBrowserFactors.length > 0 && (
-          <InfoSection title="Why We Can Track You Across Browsers" icon="X">
+          <InfoSection title="Por Que Podemos Rastrear Você Entre Navegadores" icon="X">
             {client.crossBrowserFactors.map((factor, i) => (
-              <InfoRow key={i} label={factor.split(':')[0]} value={factor.split(':')[1]?.trim() || 'Yes'} />
+              <InfoRow key={i} label={factor.split(':')[0]} value={factor.split(':')[1]?.trim() || 'Sim'} />
             ))}
           </InfoSection>
         )}
@@ -580,13 +580,13 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* WebRTC Local IPs */}
         {client && client.webrtcLocalIPs.length > 0 && (
-          <InfoSection title="Local Network" icon="!">
+          <InfoSection title="Rede Local" icon="!">
             {client.webrtcLocalIPs.map((ip, i) => (
               <InfoRow
                 key={ip}
-                label={`Local IP ${i + 1}`}
+                label={`IP Local ${i + 1}`}
                 value={ip}
-                tooltip="Private IP revealed via WebRTC - can expose your network setup"
+                tooltip="IP privado revelado via WebRTC - pode expor sua configuração de rede"
                 warning
               />
             ))}
@@ -594,25 +594,25 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
         )}
 
         {/* Browser Section */}
-        <InfoSection title="Browser" icon="#">
+        <InfoSection title="Navegador" icon="#">
           <InfoRow
             label="User Agent"
             value={server.userAgent.substring(0, 50) + (server.userAgent.length > 50 ? '...' : '')}
             tooltip={server.userAgent}
           />
-          <InfoRow label="Languages" value={server.acceptLanguage.split(',')[0]} />
+          <InfoRow label="Idiomas" value={server.acceptLanguage.split(',')[0]} />
           <InfoRow label="Referrer" value={server.referer} />
           {client && (
             <>
-              <InfoRow label="Platform" value={client.platform} />
-              <InfoRow label="Language" value={client.language} />
-              <InfoRow label="Do Not Track" value={client.doNotTrack} />
-              <InfoRow label="Global Privacy Control" value={client.globalPrivacyControl} />
-              <InfoRow label="Cookies Enabled" value={client.cookiesEnabled} />
+              <InfoRow label="Plataforma" value={client.platform} />
+              <InfoRow label="Idioma" value={client.language} />
+              <InfoRow label="Não Rastrear" value={client.doNotTrack} />
+              <InfoRow label="Controle Global de Privacidade" value={client.globalPrivacyControl} />
+              <InfoRow label="Cookies Habilitados" value={client.cookiesEnabled} />
               <InfoRow label="LocalStorage" value={client.localStorageEnabled} />
               <InfoRow label="SessionStorage" value={client.sessionStorageEnabled} />
               <InfoRow label="IndexedDB" value={client.indexedDBEnabled} />
-              <InfoRow label="PDF Viewer" value={client.pdfViewerEnabled} />
+              <InfoRow label="Visualizador PDF" value={client.pdfViewerEnabled} />
             </>
           )}
         </InfoSection>
@@ -620,13 +620,13 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
         {/* Client Hints - More accurate OS/device info */}
         {client?.clientHints && (
           <InfoSection title="Client Hints" icon="+">
-            <InfoRow label="Architecture" value={client.clientHints.architecture} />
-            <InfoRow label="Bitness" value={client.clientHints.bitness ? `${client.clientHints.bitness}-bit` : null} />
+            <InfoRow label="Arquitetura" value={client.clientHints.architecture} />
+            <InfoRow label="Bits" value={client.clientHints.bitness ? `${client.clientHints.bitness}-bit` : null} />
             <InfoRow label="Mobile" value={client.clientHints.mobile} />
-            <InfoRow label="Model" value={client.clientHints.model} />
-            <InfoRow label="Platform Version" value={client.clientHints.platformVersion} />
+            <InfoRow label="Modelo" value={client.clientHints.model} />
+            <InfoRow label="Versão da Plataforma" value={client.clientHints.platformVersion} />
             <InfoRow
-              label="Browser Versions"
+              label="Versões do Navegador"
               value={
                 client.clientHints.fullVersionList
                   ? client.clientHints.fullVersionList.substring(0, 40) + '...'
@@ -639,35 +639,35 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Device Section */}
         {client && (
-          <InfoSection title="Display" icon="=">
-            <InfoRow label="Screen" value={`${client.screenWidth} x ${client.screenHeight}`} tooltip="Screen resolution" />
-            <InfoRow label="Window" value={`${client.windowWidth} x ${client.windowHeight}`} tooltip="Browser window size" />
-            <InfoRow label="Color Depth" value={`${client.screenColorDepth}-bit`} />
-            <InfoRow label="Pixel Ratio" value={`${client.devicePixelRatio}x`} />
-            <InfoRow label="Orientation" value={client.screenOrientation} />
-            <InfoRow label="Touch Points" value={client.maxTouchPoints} />
+          <InfoSection title="Tela" icon="=">
+            <InfoRow label="Tela" value={`${client.screenWidth} x ${client.screenHeight}`} tooltip="Resolução da tela" />
+            <InfoRow label="Janela" value={`${client.windowWidth} x ${client.windowHeight}`} tooltip="Tamanho da janela do navegador" />
+            <InfoRow label="Profundidade de Cor" value={`${client.screenColorDepth}-bit`} />
+            <InfoRow label="Razão de Pixels" value={`${client.devicePixelRatio}x`} />
+            <InfoRow label="Orientação" value={client.screenOrientation} />
+            <InfoRow label="Pontos de Toque" value={client.maxTouchPoints} />
           </InfoSection>
         )}
 
         {/* Hardware Section */}
         {client && (
           <InfoSection title="Hardware" icon="*">
-            <InfoRow label="CPU Cores" value={client.hardwareConcurrency} tooltip="Number of logical processors" />
+            <InfoRow label="Núcleos da CPU" value={client.hardwareConcurrency} tooltip="Número de processadores lógicos" />
             <InfoRow
               label="RAM"
               value={
                 client.deviceMemory
-                  ? `${client.deviceMemory} GB${client.deviceMemoryCapped ? ' (capped)' : ''}`
+                  ? `${client.deviceMemory} GB${client.deviceMemoryCapped ? ' (limitado)' : ''}`
                   : null
               }
               tooltip={
                 client.deviceMemoryCapped
-                  ? 'Browser caps RAM at 8GB for privacy - actual RAM may be higher!'
-                  : 'Approximate device memory'
+                  ? 'Navegador limita RAM em 8GB por privacidade - RAM real pode ser maior!'
+                  : 'Memória aproximada do dispositivo'
               }
               warning={client.deviceMemoryCapped}
             />
-            <InfoRow label="GPU Vendor" value={client.webglVendor} />
+            <InfoRow label="Fabricante da GPU" value={client.webglVendor} />
             <InfoRow
               label="GPU"
               value={
@@ -677,48 +677,48 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
               }
               tooltip={client.webglRenderer || undefined}
             />
-            <InfoRow label="WebGL Version" value={client.webglVersion} />
-            <InfoRow label="WebGL Extensions" value={client.webglExtensions} />
+            <InfoRow label="Versão WebGL" value={client.webglVersion} />
+            <InfoRow label="Extensões WebGL" value={client.webglExtensions} />
           </InfoSection>
         )}
 
         {/* Network Section */}
         {client && (
-          <InfoSection title="Network" icon="~">
+          <InfoSection title="Rede" icon="~">
             <InfoRow
-              label="Connection"
+              label="Conexão"
               value={client.connectionType?.toUpperCase()}
-              tooltip="Effective connection type (2G, 3G, 4G, etc.)"
+              tooltip="Tipo de conexão efetiva (2G, 3G, 4G, etc.)"
             />
             <InfoRow label="Downlink" value={client.connectionDownlink ? `${client.connectionDownlink} Mbps` : null} />
-            <InfoRow label="RTT" value={client.connectionRtt ? `${client.connectionRtt} ms` : null} tooltip="Round-trip time estimate" />
-            <InfoRow label="Data Saver" value={client.connectionSaveData} tooltip="Data saver mode enabled" />
-            <InfoRow label="Battery" value={client.batteryLevel !== null ? `${client.batteryLevel}%` : null} />
-            <InfoRow label="Charging" value={client.batteryCharging} />
-            <InfoRow label="WebRTC Supported" value={client.webrtcSupported} />
+            <InfoRow label="RTT" value={client.connectionRtt ? `${client.connectionRtt} ms` : null} tooltip="Estimativa de tempo de ida e volta" />
+            <InfoRow label="Economia de Dados" value={client.connectionSaveData} tooltip="Modo de economia de dados habilitado" />
+            <InfoRow label="Bateria" value={client.batteryLevel !== null ? `${client.batteryLevel}%` : null} />
+            <InfoRow label="Carregando" value={client.batteryCharging} />
+            <InfoRow label="WebRTC Suportado" value={client.webrtcSupported} />
           </InfoSection>
         )}
 
         {/* Media Devices */}
         {client?.mediaDevices && (
-          <InfoSection title="Media Devices" icon="M">
-            <InfoRow label="Microphones" value={client.mediaDevices.audioinput} />
-            <InfoRow label="Cameras" value={client.mediaDevices.videoinput} />
-            <InfoRow label="Speakers" value={client.mediaDevices.audiooutput} />
+          <InfoSection title="Dispositivos de Mídia" icon="M">
+            <InfoRow label="Microfones" value={client.mediaDevices.audioinput} />
+            <InfoRow label="Câmeras" value={client.mediaDevices.videoinput} />
+            <InfoRow label="Alto-falantes" value={client.mediaDevices.audiooutput} />
           </InfoSection>
         )}
 
         {/* Storage Section */}
         {client?.storageQuota && (
-          <InfoSection title="Storage" icon="D">
-            <InfoRow label="Used" value={formatBytes(client.storageQuota.usage)} />
+          <InfoSection title="Armazenamento" icon="D">
+            <InfoRow label="Usado" value={formatBytes(client.storageQuota.usage)} />
             <InfoRow
-              label="Quota"
+              label="Cota"
               value={formatBytes(client.storageQuota.quota)}
-              tooltip="Estimated storage quota - can reveal disk size"
+              tooltip="Cota de armazenamento estimada - pode revelar tamanho do disco"
             />
             <InfoRow
-              label="Usage %"
+              label="Uso %"
               value={`${((client.storageQuota.usage / client.storageQuota.quota) * 100).toFixed(2)}%`}
             />
           </InfoSection>
@@ -726,7 +726,7 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Permissions Section */}
         {client && Object.keys(client.permissions).length > 0 && (
-          <InfoSection title="Permissions" icon="P">
+          <InfoSection title="Permissões" icon="P">
             {Object.entries(client.permissions).map(([name, state]) => (
               <InfoRow key={name} label={name} value={state} />
             ))}
@@ -735,7 +735,7 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* API Support Section */}
         {client && (
-          <InfoSection title="API Support" icon="A">
+          <InfoSection title="Suporte a APIs" icon="A">
             <InfoRow label="Bluetooth" value={client.bluetoothSupported} />
             <InfoRow label="USB" value={client.usbSupported} />
             <InfoRow label="MIDI" value={client.midiSupported} />
@@ -747,16 +747,16 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Fingerprints Section */}
         {client && (
-          <InfoSection title="Fingerprints" icon="@">
-            <InfoRow label="Canvas Hash" value={client.canvasFingerprint} tooltip="Unique identifier from canvas rendering" />
-            <InfoRow label="Audio Hash" value={client.audioFingerprint} tooltip="Unique identifier from audio processing" />
-            <InfoRow label="WebGL Hash" value={client.webglFingerprint} tooltip="Unique identifier from WebGL parameters" />
-            <InfoRow label="Fonts Detected" value={client.fontsDetected.length} tooltip={client.fontsDetected.join(', ')} />
-            <InfoRow label="Speech Voices" value={client.speechVoicesCount} tooltip="Number of text-to-speech voices installed" />
-            <InfoRow label="Voices Hash" value={client.speechVoicesHash} tooltip="Hash of installed voices - very unique!" />
-            <InfoRow label="Timezone" value={client.timezone} />
+          <InfoSection title="Impressões Digitais" icon="@">
+            <InfoRow label="Hash Canvas" value={client.canvasFingerprint} tooltip="Identificador único da renderização canvas" />
+            <InfoRow label="Hash de Áudio" value={client.audioFingerprint} tooltip="Identificador único do processamento de áudio" />
+            <InfoRow label="Hash WebGL" value={client.webglFingerprint} tooltip="Identificador único dos parâmetros WebGL" />
+            <InfoRow label="Fontes Detectadas" value={client.fontsDetected.length} tooltip={client.fontsDetected.join(', ')} />
+            <InfoRow label="Vozes de Fala" value={client.speechVoicesCount} tooltip="Número de vozes de texto para fala instaladas" />
+            <InfoRow label="Hash de Vozes" value={client.speechVoicesHash} tooltip="Hash das vozes instaladas - muito único!" />
+            <InfoRow label="Fuso Horário" value={client.timezone} />
             <InfoRow
-              label="TZ Offset"
+              label="Offset TZ"
               value={`UTC${client.timezoneOffset > 0 ? '-' : '+'}${Math.abs(client.timezoneOffset / 60)}`}
             />
           </InfoSection>
@@ -764,71 +764,71 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Privacy & Tracking Section */}
         {client && (
-          <InfoSection title="Tracking Detection" icon="!">
+          <InfoSection title="Detecção de Rastreamento" icon="!">
             <InfoRow
-              label="Ad Blocker"
-              value={client.adBlockerDetected === null ? 'Unknown' : client.adBlockerDetected ? 'Detected' : 'Not detected'}
-              tooltip="Whether an ad blocker is active"
+              label="Bloqueador de Anúncios"
+              value={client.adBlockerDetected === null ? 'Desconhecido' : client.adBlockerDetected ? 'Detectado' : 'Não detectado'}
+              tooltip="Se um bloqueador de anúncios está ativo"
             />
-            <InfoRow label="Do Not Track" value={client.doNotTrack ? 'Enabled' : 'Disabled'} />
+            <InfoRow label="Não Rastrear" value={client.doNotTrack ? 'Habilitado' : 'Desabilitado'} />
             <InfoRow
-              label="Global Privacy Control"
-              value={client.globalPrivacyControl === null ? 'N/A' : client.globalPrivacyControl ? 'Enabled' : 'Disabled'}
+              label="Controle Global de Privacidade"
+              value={client.globalPrivacyControl === null ? 'N/A' : client.globalPrivacyControl ? 'Habilitado' : 'Desabilitado'}
             />
           </InfoSection>
         )}
 
         {/* Browser Detection */}
         {client && (
-          <InfoSection title="Browser Analysis" icon="B">
-            <InfoRow label="Browser" value={`${client.browserName} ${client.browserVersion}`} />
-            <InfoRow label="Hardware Family" value={client.hardwareFamily} />
+          <InfoSection title="Análise do Navegador" icon="B">
+            <InfoRow label="Navegador" value={`${client.browserName} ${client.browserVersion}`} />
+            <InfoRow label="Família de Hardware" value={client.hardwareFamily} />
             <InfoRow
-              label="Incognito Mode"
-              value={client.isIncognito === null ? 'Unknown' : client.isIncognito ? 'Yes' : 'No'}
-              tooltip="Private/incognito browsing detected"
+              label="Modo Anônimo"
+              value={client.isIncognito === null ? 'Desconhecido' : client.isIncognito ? 'Sim' : 'Não'}
+              tooltip="Navegação privada/anônima detectada"
               warning={client.isIncognito === true}
             />
             <InfoRow
-              label="Automated"
+              label="Automatizado"
               value={client.isAutomated}
-              tooltip="Selenium, Puppeteer, or other automation detected"
+              tooltip="Selenium, Puppeteer ou outra automação detectada"
               warning={client.isAutomated}
             />
             <InfoRow
               label="Headless"
               value={client.isHeadless}
-              tooltip="Headless browser detected"
+              tooltip="Navegador headless detectado"
               warning={client.isHeadless}
             />
             <InfoRow
-              label="Virtual Machine"
-              value={client.isVirtualMachine === null ? 'Unknown' : client.isVirtualMachine ? 'Yes' : 'No'}
-              tooltip="Running in a VM"
+              label="Máquina Virtual"
+              value={client.isVirtualMachine === null ? 'Desconhecido' : client.isVirtualMachine ? 'Sim' : 'Não'}
+              tooltip="Executando em uma VM"
             />
-            <InfoRow label="History Length" value={client.historyLength} tooltip="Number of pages in browser history" />
+            <InfoRow label="Tamanho do Histórico" value={client.historyLength} tooltip="Número de páginas no histórico do navegador" />
           </InfoSection>
         )}
 
         {/* CSS Preferences */}
         {client && (
-          <InfoSection title="System Preferences" icon="S">
-            <InfoRow label="Color Scheme" value={client.prefersColorScheme} tooltip="Dark/light mode preference" />
-            <InfoRow label="Reduced Motion" value={client.prefersReducedMotion} />
-            <InfoRow label="Reduced Transparency" value={client.prefersReducedTransparency} />
-            <InfoRow label="Contrast" value={client.prefersContrast} />
-            <InfoRow label="Forced Colors" value={client.forcedColors} tooltip="Windows High Contrast mode" />
-            <InfoRow label="Color Gamut" value={client.colorGamut} tooltip="Display color range" />
-            <InfoRow label="HDR Support" value={client.hdrSupported} />
-            <InfoRow label="Inverted Colors" value={client.invertedColors} />
+          <InfoSection title="Preferências do Sistema" icon="S">
+            <InfoRow label="Esquema de Cores" value={client.prefersColorScheme} tooltip="Preferência de modo escuro/claro" />
+            <InfoRow label="Movimento Reduzido" value={client.prefersReducedMotion} />
+            <InfoRow label="Transparência Reduzida" value={client.prefersReducedTransparency} />
+            <InfoRow label="Contraste" value={client.prefersContrast} />
+            <InfoRow label="Cores Forçadas" value={client.forcedColors} tooltip="Modo Alto Contraste do Windows" />
+            <InfoRow label="Gamut de Cores" value={client.colorGamut} tooltip="Faixa de cores da tela" />
+            <InfoRow label="Suporte HDR" value={client.hdrSupported} />
+            <InfoRow label="Cores Invertidas" value={client.invertedColors} />
           </InfoSection>
         )}
 
         {/* Codec Support */}
         {client && (
-          <InfoSection title="Media Codecs" icon="V">
-            <InfoRow label="Video Codecs" value={client.videoCodecs.join(', ')} />
-            <InfoRow label="Audio Codecs" value={client.audioCodecs.join(', ')} />
+          <InfoSection title="Codecs de Mídia" icon="V">
+            <InfoRow label="Codecs de Vídeo" value={client.videoCodecs.join(', ')} />
+            <InfoRow label="Codecs de Áudio" value={client.audioCodecs.join(', ')} />
             <InfoRow label="Widevine DRM" value={client.drmSupported.widevine} />
             <InfoRow label="FairPlay DRM" value={client.drmSupported.fairplay} />
             <InfoRow label="PlayReady DRM" value={client.drmSupported.playready} />
@@ -837,45 +837,45 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Sensors */}
         {client && (
-          <InfoSection title="Sensors" icon="G">
-            <InfoRow label="Accelerometer" value={client.sensors.accelerometer} />
-            <InfoRow label="Gyroscope" value={client.sensors.gyroscope} />
-            <InfoRow label="Magnetometer" value={client.sensors.magnetometer} />
-            <InfoRow label="Ambient Light" value={client.sensors.ambientLight} />
-            <InfoRow label="Proximity" value={client.sensors.proximity} />
-            <InfoRow label="Linear Acceleration" value={client.sensors.linearAcceleration} />
-            <InfoRow label="Gravity" value={client.sensors.gravity} />
-            <InfoRow label="Orientation" value={client.sensors.absoluteOrientation} />
+          <InfoSection title="Sensores" icon="G">
+            <InfoRow label="Acelerômetro" value={client.sensors.accelerometer} />
+            <InfoRow label="Giroscópio" value={client.sensors.gyroscope} />
+            <InfoRow label="Magnetômetro" value={client.sensors.magnetometer} />
+            <InfoRow label="Luz Ambiente" value={client.sensors.ambientLight} />
+            <InfoRow label="Proximidade" value={client.sensors.proximity} />
+            <InfoRow label="Aceleração Linear" value={client.sensors.linearAcceleration} />
+            <InfoRow label="Gravidade" value={client.sensors.gravity} />
+            <InfoRow label="Orientação" value={client.sensors.absoluteOrientation} />
           </InfoSection>
         )}
 
         {/* Performance Memory */}
         {client?.performanceMemory && (
-          <InfoSection title="JS Memory" icon="J">
-            <InfoRow label="Heap Limit" value={formatBytes(client.performanceMemory.jsHeapSizeLimit)} />
-            <InfoRow label="Total Heap" value={formatBytes(client.performanceMemory.totalJSHeapSize)} />
-            <InfoRow label="Used Heap" value={formatBytes(client.performanceMemory.usedJSHeapSize)} />
+          <InfoSection title="Memória JS" icon="J">
+            <InfoRow label="Limite do Heap" value={formatBytes(client.performanceMemory.jsHeapSizeLimit)} />
+            <InfoRow label="Heap Total" value={formatBytes(client.performanceMemory.totalJSHeapSize)} />
+            <InfoRow label="Heap Usado" value={formatBytes(client.performanceMemory.usedJSHeapSize)} />
           </InfoSection>
         )}
 
         {/* Extensions Detected */}
         {client && client.extensionsDetected.length > 0 && (
-          <InfoSection title="Extensions Detected" icon="E">
+          <InfoSection title="Extensões Detectadas" icon="E">
             {client.extensionsDetected.map((ext) => (
-              <InfoRow key={ext} label={ext} value="Detected" warning />
+              <InfoRow key={ext} label={ext} value="Detectado" warning />
             ))}
           </InfoSection>
         )}
 
         {/* Advanced Capabilities */}
         {client && (
-          <InfoSection title="Web APIs" icon="W">
+          <InfoSection title="APIs Web" icon="W">
             <InfoRow label="Service Worker" value={client.serviceWorkerSupported} />
             <InfoRow label="Web Worker" value={client.webWorkerSupported} />
             <InfoRow label="WebAssembly" value={client.wasmSupported} />
             <InfoRow label="WebSocket" value={client.webSocketSupported} />
             <InfoRow label="WebRTC" value={client.webRTCSupported} />
-            <InfoRow label="Notifications" value={client.notificationSupported} />
+            <InfoRow label="Notificações" value={client.notificationSupported} />
             <InfoRow label="Push API" value={client.pushSupported} />
             <InfoRow label="Payment Request" value={client.paymentRequestSupported} />
             <InfoRow label="Credentials API" value={client.credentialsSupported} />
@@ -885,28 +885,28 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Advanced Fingerprints */}
         {client && (
-          <InfoSection title="Advanced Fingerprints" icon="F">
-            <InfoRow label="Math Hash" value={client.mathFingerprint} tooltip="JS engine math differences" />
-            <InfoRow label="Timing Hash" value={client.timingFingerprint} tooltip="CPU performance fingerprint" />
-            <InfoRow label="Error Hash" value={client.errorFingerprint} tooltip="Error message fingerprint" />
-            <InfoRow label="Navigator Props" value={client.navigatorPropsCount} tooltip="Number of navigator properties" />
-            <InfoRow label="Window Props" value={client.windowPropsCount} tooltip="Number of window properties" />
-            <InfoRow label="Max Downlink" value={client.downlinkMax ? `${client.downlinkMax} Mbps` : 'N/A'} />
+          <InfoSection title="Impressões Digitais Avançadas" icon="F">
+            <InfoRow label="Hash Matemático" value={client.mathFingerprint} tooltip="Diferenças matemáticas do motor JS" />
+            <InfoRow label="Hash de Timing" value={client.timingFingerprint} tooltip="Impressão digital de performance da CPU" />
+            <InfoRow label="Hash de Erro" value={client.errorFingerprint} tooltip="Impressão digital de mensagens de erro" />
+            <InfoRow label="Props do Navigator" value={client.navigatorPropsCount} tooltip="Número de propriedades do navigator" />
+            <InfoRow label="Props da Janela" value={client.windowPropsCount} tooltip="Número de propriedades da janela" />
+            <InfoRow label="Downlink Máximo" value={client.downlinkMax ? `${client.downlinkMax} Mbps` : 'N/A'} />
           </InfoSection>
         )}
 
         {/* WASM Fingerprint */}
         {client?.wasmFingerprint && (
-          <InfoSection title="WebAssembly Fingerprint" icon="W">
+          <InfoSection title="Impressão Digital WebAssembly" icon="W">
             <InfoRow
-              label="WASM Support"
-              value={client.wasmFingerprint.supported ? 'Supported' : 'Not Supported'}
-              tooltip="WebAssembly support in this browser"
+              label="Suporte WASM"
+              value={client.wasmFingerprint.supported ? 'Suportado' : 'Não Suportado'}
+              tooltip="Suporte a WebAssembly neste navegador"
             />
             {client.wasmFingerprint.supported && (
               <>
                 <InfoRow
-                  label="Features"
+                  label="Recursos"
                   value={[
                     client.wasmFingerprint.features.simd && 'SIMD',
                     client.wasmFingerprint.features.threads && 'Threads',
@@ -916,70 +916,70 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
                     client.wasmFingerprint.features.relaxedSimd && 'Relaxed SIMD',
                     client.wasmFingerprint.features.referenceTypes && 'Ref Types',
                     client.wasmFingerprint.features.bulkMemory && 'Bulk Memory',
-                  ].filter(Boolean).join(', ') || 'Basic only'}
-                  tooltip="Detected WASM features"
+                  ].filter(Boolean).join(', ') || 'Apenas básico'}
+                  tooltip="Recursos WASM detectados"
                 />
                 {client.wasmFingerprint.timing && (
                   <>
                     <InfoRow
-                      label="Call Latency"
+                      label="Latência de Chamada"
                       value={`${client.wasmFingerprint.timing.callLatencyMicros.toFixed(2)} us`}
-                      tooltip="JS-to-WASM call latency"
+                      tooltip="Latência de chamada JS-para-WASM"
                     />
                     <InfoRow
-                      label="Memory Access"
+                      label="Acesso à Memória"
                       value={`${client.wasmFingerprint.timing.memoryAccessMicros.toFixed(2)} us`}
-                      tooltip="WASM memory access timing"
+                      tooltip="Timing de acesso à memória WASM"
                     />
                     <InfoRow
-                      label="Compilation Time"
+                      label="Tempo de Compilação"
                       value={`${client.wasmFingerprint.timing.compilationTimeMs.toFixed(2)} ms`}
-                      tooltip="WASM module compilation time"
+                      tooltip="Tempo de compilação do módulo WASM"
                     />
                   </>
                 )}
                 {client.wasmFingerprint.benchmark && (
                   <>
                     <InfoRow
-                      label="CPU Tier"
-                      value={`Tier ${client.wasmFingerprint.benchmark.cpuTier}/5`}
-                      tooltip="Estimated CPU performance tier"
+                      label="Nível da CPU"
+                      value={`Nível ${client.wasmFingerprint.benchmark.cpuTier}/5`}
+                      tooltip="Nível estimado de performance da CPU"
                       warning={client.wasmFingerprint.benchmark.cpuTier <= 2}
                     />
                     <InfoRow
-                      label="Int Ops/ms"
+                      label="Ops Int/ms"
                       value={client.wasmFingerprint.benchmark.intOpsPerMs.toLocaleString()}
-                      tooltip="Integer operations per millisecond"
+                      tooltip="Operações inteiras por milissegundo"
                     />
                     <InfoRow
-                      label="Float Ops/ms"
+                      label="Ops Float/ms"
                       value={client.wasmFingerprint.benchmark.floatOpsPerMs.toLocaleString()}
-                      tooltip="Floating point operations per millisecond"
+                      tooltip="Operações de ponto flutuante por milissegundo"
                     />
                     <InfoRow
-                      label="Memory Throughput"
+                      label="Taxa de Transferência de Memória"
                       value={`${client.wasmFingerprint.benchmark.memoryThroughputMBps.toFixed(1)} MB/s`}
-                      tooltip="WASM memory throughput"
+                      tooltip="Taxa de transferência de memória WASM"
                     />
                   </>
                 )}
                 {client.wasmFingerprint.memoryLimits && (
                   <InfoRow
-                    label="Max Memory"
+                    label="Memória Máxima"
                     value={`${Math.round(client.wasmFingerprint.memoryLimits.maxPages * 64 / 1024)} MB`}
-                    tooltip="Maximum WASM memory allocation"
+                    tooltip="Alocação máxima de memória WASM"
                   />
                 )}
                 <InfoRow
-                  label="WASM Hash"
+                  label="Hash WASM"
                   value={client.wasmFingerprint.fingerprintHash}
-                  tooltip="Unique WASM fingerprint hash"
+                  tooltip="Hash único de impressão digital WASM"
                   warning
                 />
                 <InfoRow
-                  label="Confidence"
+                  label="Confiança"
                   value={`${client.wasmFingerprint.confidence}%`}
-                  tooltip="Fingerprint reliability score"
+                  tooltip="Pontuação de confiabilidade da impressão digital"
                 />
               </>
             )}
@@ -988,40 +988,40 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* WebGPU Fingerprint */}
         {client?.webgpuFingerprint && (
-          <InfoSection title="WebGPU Fingerprint" icon="G">
+          <InfoSection title="Impressão Digital WebGPU" icon="G">
             <InfoRow
               label="WebGPU"
-              value={client.webgpuFingerprint.available ? 'Available' : 'Not Available'}
-              tooltip="WebGPU API availability"
+              value={client.webgpuFingerprint.available ? 'Disponível' : 'Não Disponível'}
+              tooltip="Disponibilidade da API WebGPU"
             />
             {client.webgpuFingerprint.available && client.webgpuFingerprint.adapterInfo && (
               <>
                 <InfoRow
-                  label="GPU Vendor"
+                  label="Fabricante da GPU"
                   value={client.webgpuFingerprint.adapterInfo.vendor}
-                  tooltip="GPU vendor from WebGPU"
+                  tooltip="Fabricante da GPU do WebGPU"
                 />
                 <InfoRow
-                  label="Architecture"
+                  label="Arquitetura"
                   value={client.webgpuFingerprint.adapterInfo.architecture}
-                  tooltip="GPU architecture"
+                  tooltip="Arquitetura da GPU"
                 />
                 <InfoRow
-                  label="Device"
+                  label="Dispositivo"
                   value={client.webgpuFingerprint.adapterInfo.device}
-                  tooltip="GPU device identifier"
+                  tooltip="Identificador do dispositivo GPU"
                 />
                 {client.webgpuFingerprint.adapterInfo.description && client.webgpuFingerprint.adapterInfo.description !== 'unknown' && (
                   <InfoRow
-                    label="Description"
+                    label="Descrição"
                     value={client.webgpuFingerprint.adapterInfo.description.substring(0, 50) + (client.webgpuFingerprint.adapterInfo.description.length > 50 ? '...' : '')}
                     tooltip={client.webgpuFingerprint.adapterInfo.description}
                   />
                 )}
                 <InfoRow
-                  label="Fallback Adapter"
+                  label="Adaptador Fallback"
                   value={client.webgpuFingerprint.adapterInfo.isFallbackAdapter}
-                  tooltip="Using software fallback"
+                  tooltip="Usando fallback de software"
                   warning={client.webgpuFingerprint.adapterInfo.isFallbackAdapter}
                 />
               </>
@@ -1029,43 +1029,43 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
             {client.webgpuFingerprint.available && (
               <>
                 <InfoRow
-                  label="Feature Count"
+                  label="Contagem de Recursos"
                   value={client.webgpuFingerprint.features.length}
-                  tooltip="Number of supported WebGPU features"
+                  tooltip="Número de recursos WebGPU suportados"
                 />
                 {client.webgpuFingerprint.features.length > 0 && (
                   <InfoRow
-                    label="Key Features"
+                    label="Recursos Principais"
                     value={client.webgpuFingerprint.features.slice(0, 5).join(', ') + (client.webgpuFingerprint.features.length > 5 ? '...' : '')}
                     tooltip={client.webgpuFingerprint.features.join(', ')}
                   />
                 )}
                 {client.webgpuFingerprint.preferredCanvasFormat && (
                   <InfoRow
-                    label="Canvas Format"
+                    label="Formato Canvas"
                     value={client.webgpuFingerprint.preferredCanvasFormat}
-                    tooltip="Preferred canvas format for this GPU"
+                    tooltip="Formato de canvas preferido para esta GPU"
                   />
                 )}
                 {client.webgpuFingerprint.computeTimingFingerprint && (
                   <>
                     <InfoRow
-                      label="Compute Timing"
+                      label="Timing de Computação"
                       value={`${client.webgpuFingerprint.computeTimingFingerprint.avgExecutionTime.toFixed(2)} ms`}
-                      tooltip="Average compute shader execution time"
+                      tooltip="Tempo médio de execução do compute shader"
                     />
                     <InfoRow
-                      label="Timing Pattern"
+                      label="Padrão de Timing"
                       value={client.webgpuFingerprint.computeTimingFingerprint.patternHash}
-                      tooltip="GPU scheduling pattern hash - unique to GPU model"
+                      tooltip="Hash do padrão de agendamento da GPU - único para o modelo da GPU"
                       warning
                     />
                   </>
                 )}
                 <InfoRow
-                  label="WebGPU Hash"
+                  label="Hash WebGPU"
                   value={client.webgpuFingerprint.fingerprintHash}
-                  tooltip="Unique WebGPU fingerprint hash"
+                  tooltip="Hash único de impressão digital WebGPU"
                   warning
                 />
               </>
@@ -1075,57 +1075,57 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Chrome AI Status */}
         {client?.chromeAIStatus && (
-          <InfoSection title="Chrome Built-in AI" icon="A">
+          <InfoSection title="IA Integrada do Chrome" icon="A">
             <InfoRow
               label="Chrome AI"
-              value={client.chromeAIStatus.chromeAISupported ? 'Supported' : 'Not Supported'}
-              tooltip="Chrome's built-in Gemini Nano AI"
+              value={client.chromeAIStatus.chromeAISupported ? 'Suportado' : 'Não Suportado'}
+              tooltip="IA Gemini Nano integrada do Chrome"
             />
             <InfoRow
-              label="Browser"
-              value={client.chromeAIStatus.browser.isChrome ? `Chrome ${client.chromeAIStatus.browser.version}` : 'Not Chrome'}
-              tooltip="Chrome browser detection"
+              label="Navegador"
+              value={client.chromeAIStatus.browser.isChrome ? `Chrome ${client.chromeAIStatus.browser.version}` : 'Não é Chrome'}
+              tooltip="Detecção do navegador Chrome"
             />
             <InfoRow
-              label="Min Version Met"
+              label="Versão Mínima Atendida"
               value={client.chromeAIStatus.browser.meetsMinimumVersion}
-              tooltip="Meets Chrome 127+ requirement"
+              tooltip="Atende ao requisito Chrome 127+"
             />
             {client.chromeAIStatus.apis.languageModel.supported && (
               <InfoRow
-                label="Language Model"
-                value={client.chromeAIStatus.apis.languageModel.available === 'readily' ? 'Ready' :
-                       client.chromeAIStatus.apis.languageModel.available === 'after-download' ? 'Needs Download' :
-                       client.chromeAIStatus.apis.languageModel.available === 'no' ? 'Unavailable' : 'Not Supported'}
-                tooltip="Gemini Nano language model API"
+                label="Modelo de Linguagem"
+                value={client.chromeAIStatus.apis.languageModel.available === 'readily' ? 'Pronto' :
+                       client.chromeAIStatus.apis.languageModel.available === 'after-download' ? 'Precisa Baixar' :
+                       client.chromeAIStatus.apis.languageModel.available === 'no' ? 'Indisponível' : 'Não Suportado'}
+                tooltip="API do modelo de linguagem Gemini Nano"
                 warning={client.chromeAIStatus.apis.languageModel.available === 'readily'}
               />
             )}
             {client.chromeAIStatus.apis.summarizer.supported && (
               <InfoRow
-                label="Summarizer"
-                value={client.chromeAIStatus.apis.summarizer.available === 'readily' ? 'Ready' :
-                       client.chromeAIStatus.apis.summarizer.available === 'after-download' ? 'Needs Download' :
-                       client.chromeAIStatus.apis.summarizer.available === 'no' ? 'Unavailable' : 'Not Supported'}
-                tooltip="AI summarization API"
+                label="Resumidor"
+                value={client.chromeAIStatus.apis.summarizer.available === 'readily' ? 'Pronto' :
+                       client.chromeAIStatus.apis.summarizer.available === 'after-download' ? 'Precisa Baixar' :
+                       client.chromeAIStatus.apis.summarizer.available === 'no' ? 'Indisponível' : 'Não Suportado'}
+                tooltip="API de sumarização por IA"
               />
             )}
             {client.chromeAIStatus.apis.translator.supported && (
               <InfoRow
-                label="Translator"
-                value={client.chromeAIStatus.apis.translator.available === 'readily' ? 'Ready' :
-                       client.chromeAIStatus.apis.translator.available === 'after-download' ? 'Needs Download' :
-                       client.chromeAIStatus.apis.translator.available === 'no' ? 'Unavailable' : 'Not Supported'}
-                tooltip="AI translation API"
+                label="Tradutor"
+                value={client.chromeAIStatus.apis.translator.available === 'readily' ? 'Pronto' :
+                       client.chromeAIStatus.apis.translator.available === 'after-download' ? 'Precisa Baixar' :
+                       client.chromeAIStatus.apis.translator.available === 'no' ? 'Indisponível' : 'Não Suportado'}
+                tooltip="API de tradução por IA"
               />
             )}
             {client.chromeAIStatus.apis.languageDetector.supported && (
               <InfoRow
-                label="Language Detector"
-                value={client.chromeAIStatus.apis.languageDetector.available === 'readily' ? 'Ready' :
-                       client.chromeAIStatus.apis.languageDetector.available === 'after-download' ? 'Needs Download' :
-                       client.chromeAIStatus.apis.languageDetector.available === 'no' ? 'Unavailable' : 'Not Supported'}
-                tooltip="AI language detection API"
+                label="Detector de Idioma"
+                value={client.chromeAIStatus.apis.languageDetector.available === 'readily' ? 'Pronto' :
+                       client.chromeAIStatus.apis.languageDetector.available === 'after-download' ? 'Precisa Baixar' :
+                       client.chromeAIStatus.apis.languageDetector.available === 'no' ? 'Indisponível' : 'Não Suportado'}
+                tooltip="API de detecção de idioma por IA"
               />
             )}
             {!client.chromeAIStatus.apis.languageModel.supported &&
@@ -1134,8 +1134,8 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
              !client.chromeAIStatus.apis.languageDetector.supported && (
               <InfoRow
                 label="APIs"
-                value="None detected"
-                tooltip="No Chrome AI APIs detected"
+                value="Nenhuma detectada"
+                tooltip="Nenhuma API do Chrome AI detectada"
               />
             )}
           </InfoSection>
@@ -1143,89 +1143,89 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Real-time Behavior Tracking */}
         {client && (
-          <InfoSection title="Mouse Behavior" icon="M">
-            <InfoRow label="Speed" value={`${client.behavior.mouseSpeed} px/s`} tooltip="Average mouse speed" />
-            <InfoRow label="Acceleration" value={`${client.behavior.mouseAcceleration}`} />
-            <InfoRow label="Movements" value={client.behavior.mouseMovements} />
-            <InfoRow label="Distance" value={`${client.behavior.mouseDistanceTraveled} px`} tooltip="Total distance traveled" />
-            <InfoRow label="Idle Time" value={`${Math.round(client.behavior.mouseIdleTime / 1000)}s`} />
-            <InfoRow label="Clicks" value={client.behavior.clickCount} />
-            <InfoRow label="Click Interval" value={client.behavior.avgClickInterval ? `${client.behavior.avgClickInterval}ms` : 'N/A'} />
+          <InfoSection title="Comportamento do Mouse" icon="M">
+            <InfoRow label="Velocidade" value={`${client.behavior.mouseSpeed} px/s`} tooltip="Velocidade média do mouse" />
+            <InfoRow label="Aceleração" value={`${client.behavior.mouseAcceleration}`} />
+            <InfoRow label="Movimentos" value={client.behavior.mouseMovements} />
+            <InfoRow label="Distância" value={`${client.behavior.mouseDistanceTraveled} px`} tooltip="Distância total percorrida" />
+            <InfoRow label="Tempo Inativo" value={`${Math.round(client.behavior.mouseIdleTime / 1000)}s`} />
+            <InfoRow label="Cliques" value={client.behavior.clickCount} />
+            <InfoRow label="Intervalo de Cliques" value={client.behavior.avgClickInterval ? `${client.behavior.avgClickInterval}ms` : 'N/A'} />
           </InfoSection>
         )}
 
         {client && (
-          <InfoSection title="Scroll Behavior" icon="S">
-            <InfoRow label="Speed" value={`${client.behavior.scrollSpeed} px/s`} />
-            <InfoRow label="Max Depth" value={`${Math.round(client.behavior.scrollDepthMax * 100)}%`} tooltip="Deepest scroll position" />
-            <InfoRow label="Direction Changes" value={client.behavior.scrollDirectionChanges} />
-            <InfoRow label="Scroll Events" value={client.behavior.scrollEvents} />
+          <InfoSection title="Comportamento de Scroll" icon="S">
+            <InfoRow label="Velocidade" value={`${client.behavior.scrollSpeed} px/s`} />
+            <InfoRow label="Profundidade Máxima" value={`${Math.round(client.behavior.scrollDepthMax * 100)}%`} tooltip="Posição de scroll mais profunda" />
+            <InfoRow label="Mudanças de Direção" value={client.behavior.scrollDirectionChanges} />
+            <InfoRow label="Eventos de Scroll" value={client.behavior.scrollEvents} />
           </InfoSection>
         )}
 
         {client && (
-          <InfoSection title="Typing Behavior" icon="K">
-            <InfoRow label="Keys Pressed" value={client.behavior.keyPressCount} />
-            <InfoRow label="Hold Time" value={client.behavior.avgKeyHoldTime ? `${client.behavior.avgKeyHoldTime}ms` : 'N/A'} tooltip="Average key hold duration" />
-            <InfoRow label="Key Interval" value={client.behavior.avgKeyInterval ? `${client.behavior.avgKeyInterval}ms` : 'N/A'} tooltip="Time between key presses" />
-            <InfoRow label="Typing Speed" value={`${client.behavior.typingSpeed} CPM`} tooltip="Characters per minute" />
+          <InfoSection title="Comportamento de Digitação" icon="K">
+            <InfoRow label="Teclas Pressionadas" value={client.behavior.keyPressCount} />
+            <InfoRow label="Tempo de Pressionamento" value={client.behavior.avgKeyHoldTime ? `${client.behavior.avgKeyHoldTime}ms` : 'N/A'} tooltip="Duração média de pressionamento da tecla" />
+            <InfoRow label="Intervalo entre Teclas" value={client.behavior.avgKeyInterval ? `${client.behavior.avgKeyInterval}ms` : 'N/A'} tooltip="Tempo entre pressionamentos de teclas" />
+            <InfoRow label="Velocidade de Digitação" value={`${client.behavior.typingSpeed} CPM`} tooltip="Caracteres por minuto" />
           </InfoSection>
         )}
 
         {client && (client.behavior.touchCount > 0 || navigator.maxTouchPoints > 0) && (
-          <InfoSection title="Touch Behavior" icon="T">
-            <InfoRow label="Touches" value={client.behavior.touchCount} />
-            <InfoRow label="Avg Pressure" value={client.behavior.avgTouchPressure || 'N/A'} />
+          <InfoSection title="Comportamento de Toque" icon="T">
+            <InfoRow label="Toques" value={client.behavior.touchCount} />
+            <InfoRow label="Pressão Média" value={client.behavior.avgTouchPressure || 'N/A'} />
             <InfoRow label="Pinch Zooms" value={client.behavior.pinchZoomCount} />
-            <InfoRow label="Swipes" value={client.behavior.swipeCount} />
+            <InfoRow label="Deslizamentos" value={client.behavior.swipeCount} />
           </InfoSection>
         )}
 
         {client && (
-          <InfoSection title="Attention Tracking" icon="!">
-            <InfoRow label="Tab Switches" value={client.behavior.tabSwitchCount} tooltip="Times you switched away from this tab" warning={client.behavior.tabSwitchCount > 0} />
-            <InfoRow label="Focus Time" value={formatDuration(client.behavior.totalFocusTime)} tooltip="Time spent with tab focused" />
-            <InfoRow label="Away Time" value={formatDuration(client.behavior.totalBlurTime)} tooltip="Time spent on other tabs" />
-            <InfoRow label="Session Duration" value={formatDuration(client.behavior.sessionDuration)} />
-            <InfoRow label="First Interaction" value={client.behavior.firstInteractionTime ? `${Math.round(client.behavior.firstInteractionTime)}ms` : 'N/A'} tooltip="Time until first mouse/key/touch" />
+          <InfoSection title="Rastreamento de Atenção" icon="!">
+            <InfoRow label="Trocas de Aba" value={client.behavior.tabSwitchCount} tooltip="Vezes que você saiu desta aba" warning={client.behavior.tabSwitchCount > 0} />
+            <InfoRow label="Tempo Focado" value={formatDuration(client.behavior.totalFocusTime)} tooltip="Tempo gasto com a aba em foco" />
+            <InfoRow label="Tempo Ausente" value={formatDuration(client.behavior.totalBlurTime)} tooltip="Tempo gasto em outras abas" />
+            <InfoRow label="Duração da Sessão" value={formatDuration(client.behavior.sessionDuration)} />
+            <InfoRow label="Primeira Interação" value={client.behavior.firstInteractionTime ? `${Math.round(client.behavior.firstInteractionTime)}ms` : 'N/A'} tooltip="Tempo até a primeira interação mouse/tecla/toque" />
           </InfoSection>
         )}
 
         {/* Installed Apps */}
         {client && client.installedApps.length > 0 && (
-          <InfoSection title="Installed Apps" icon="A">
+          <InfoSection title="Apps Instalados" icon="A">
             {client.installedApps.map((app) => (
-              <InfoRow key={app} label={app} value="Detected" warning />
+              <InfoRow key={app} label={app} value="Detectado" warning />
             ))}
           </InfoSection>
         )}
 
         {/* Social Media Logins */}
         {client && (
-          <InfoSection title="Logged Into" icon="L">
+          <InfoSection title="Logado Em" icon="L">
             <InfoRow
               label="Google"
-              value={client.socialLogins.google === null ? 'Unknown' : client.socialLogins.google ? 'Logged In' : 'Not Logged In'}
+              value={client.socialLogins.google === null ? 'Desconhecido' : client.socialLogins.google ? 'Logado' : 'Não Logado'}
               warning={client.socialLogins.google === true}
             />
             <InfoRow
               label="Facebook"
-              value={client.socialLogins.facebook === null ? 'Unknown' : client.socialLogins.facebook ? 'Logged In' : 'Not Logged In'}
+              value={client.socialLogins.facebook === null ? 'Desconhecido' : client.socialLogins.facebook ? 'Logado' : 'Não Logado'}
               warning={client.socialLogins.facebook === true}
             />
             <InfoRow
               label="Twitter"
-              value={client.socialLogins.twitter === null ? 'Unknown' : client.socialLogins.twitter ? 'Logged In' : 'Not Logged In'}
+              value={client.socialLogins.twitter === null ? 'Desconhecido' : client.socialLogins.twitter ? 'Logado' : 'Não Logado'}
               warning={client.socialLogins.twitter === true}
             />
             <InfoRow
               label="GitHub"
-              value={client.socialLogins.github === null ? 'Unknown' : client.socialLogins.github ? 'Logged In' : 'Not Logged In'}
+              value={client.socialLogins.github === null ? 'Desconhecido' : client.socialLogins.github ? 'Logado' : 'Não Logado'}
               warning={client.socialLogins.github === true}
             />
             <InfoRow
               label="Reddit"
-              value={client.socialLogins.reddit === null ? 'Unknown' : client.socialLogins.reddit ? 'Logged In' : 'Not Logged In'}
+              value={client.socialLogins.reddit === null ? 'Desconhecido' : client.socialLogins.reddit ? 'Logado' : 'Não Logado'}
               warning={client.socialLogins.reddit === true}
             />
           </InfoSection>
@@ -1233,31 +1233,31 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Crypto Wallets */}
         {client && client.cryptoWallets.length > 0 && (
-          <InfoSection title="Crypto Wallets" icon="$">
+          <InfoSection title="Carteiras Crypto" icon="$">
             {client.cryptoWallets.map((wallet) => (
-              <InfoRow key={wallet} label={wallet} value="Connected" warning />
+              <InfoRow key={wallet} label={wallet} value="Conectado" warning />
             ))}
           </InfoSection>
         )}
 
         {/* VPN Detection */}
         {client && (
-          <InfoSection title="VPN/Proxy Detection" icon="V">
+          <InfoSection title="Detecção de VPN/Proxy" icon="V">
             <InfoRow
-              label="Likely Using VPN"
+              label="Provavelmente Usando VPN"
               value={client.vpnDetection.likelyUsingVPN}
               warning={client.vpnDetection.likelyUsingVPN}
             />
             <InfoRow
-              label="Timezone Mismatch"
+              label="Incompatibilidade de Fuso Horário"
               value={client.vpnDetection.timezoneIPMismatch}
-              tooltip="Your browser timezone doesn't match your IP location"
+              tooltip="O fuso horário do seu navegador não corresponde à localização do seu IP"
               warning={client.vpnDetection.timezoneIPMismatch}
             />
             <InfoRow
-              label="WebRTC Leak"
+              label="Vazamento WebRTC"
               value={client.vpnDetection.webrtcLeak}
-              tooltip="Your real IP might be leaking through WebRTC"
+              tooltip="Seu IP real pode estar vazando através do WebRTC"
               warning={client.vpnDetection.webrtcLeak}
             />
           </InfoSection>
@@ -1265,28 +1265,28 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Advanced Behavior - DevTools & Idle */}
         {client && (
-          <InfoSection title="You Right Now" icon="!">
+          <InfoSection title="Você Agora" icon="!">
             <InfoRow
-              label="DevTools Open"
+              label="DevTools Aberto"
               value={client.advancedBehavior.devToolsOpen}
-              tooltip="We can detect if you're inspecting this page!"
+              tooltip="Podemos detectar se você está inspecionando esta página!"
               warning={client.advancedBehavior.devToolsOpen}
             />
             <InfoRow
               label="Status"
-              value={client.advancedBehavior.isIdle ? 'Away/Idle' : 'Active'}
+              value={client.advancedBehavior.isIdle ? 'Ausente/Inativo' : 'Ativo'}
               warning={client.advancedBehavior.isIdle}
             />
             <InfoRow
-              label="Idle Time"
+              label="Tempo Inativo"
               value={formatDuration(client.advancedBehavior.idleTime)}
             />
             <InfoRow
-              label="Times Went AFK"
+              label="Vezes que Ficou AFK"
               value={client.advancedBehavior.afkCount}
             />
             <InfoRow
-              label="Mouse In Window"
+              label="Mouse na Janela"
               value={!client.advancedBehavior.mouseLeftWindow}
             />
           </InfoSection>
@@ -1294,45 +1294,45 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Frustration & Engagement */}
         {client && (
-          <InfoSection title="Your Emotions" icon="H">
+          <InfoSection title="Suas Emoções" icon="H">
             <InfoRow
-              label="Rage Clicks"
+              label="Cliques de Raiva"
               value={client.advancedBehavior.rageClickCount}
-              tooltip="Rapid clicking in same area = frustration!"
+              tooltip="Cliques rápidos na mesma área = frustração!"
               warning={client.advancedBehavior.rageClickCount > 0}
             />
             <InfoRow
-              label="Exit Intents"
+              label="Intenções de Saída"
               value={client.advancedBehavior.exitIntentCount}
-              tooltip="Mouse moved to close/leave the page"
+              tooltip="Mouse movido para fechar/sair da página"
             />
             <InfoRow
-              label="Engagement"
+              label="Engajamento"
               value={`${client.advancedBehavior.contentEngagement}%`}
             />
             <InfoRow
-              label="Handedness"
+              label="Lateralidade"
               value={`${client.advancedBehavior.likelyHandedness} (${client.advancedBehavior.handednessConfidence}% conf)`}
-              tooltip="We can guess if you're left or right handed!"
+              tooltip="Podemos adivinhar se você é canhoto ou destro!"
             />
           </InfoSection>
         )}
 
         {/* Clipboard & Selection */}
         {client && (
-          <InfoSection title="Copy/Paste Activity" icon="C">
-            <InfoRow label="Text Selections" value={client.advancedBehavior.textSelectCount} />
+          <InfoSection title="Atividade de Copiar/Colar" icon="C">
+            <InfoRow label="Seleções de Texto" value={client.advancedBehavior.textSelectCount} />
             <InfoRow
-              label="Last Selected"
-              value={client.advancedBehavior.lastSelectedText || 'None'}
-              tooltip="We can see what text you highlight!"
+              label="Último Selecionado"
+              value={client.advancedBehavior.lastSelectedText || 'Nenhum'}
+              tooltip="Podemos ver qual texto você destaca!"
               warning={!!client.advancedBehavior.lastSelectedText}
             />
-            <InfoRow label="Copies" value={client.advancedBehavior.copyCount} />
-            <InfoRow label="Pastes" value={client.advancedBehavior.pasteCount} />
-            <InfoRow label="Right Clicks" value={client.advancedBehavior.rightClickCount} />
+            <InfoRow label="Cópias" value={client.advancedBehavior.copyCount} />
+            <InfoRow label="Colagens" value={client.advancedBehavior.pasteCount} />
+            <InfoRow label="Cliques Direitos" value={client.advancedBehavior.rightClickCount} />
             <InfoRow
-              label="Screenshot Attempts"
+              label="Tentativas de Screenshot"
               value={client.advancedBehavior.screenshotAttempts}
               warning={client.advancedBehavior.screenshotAttempts > 0}
             />
@@ -1341,9 +1341,9 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
         {/* Keyboard Shortcuts Used */}
         {client && client.advancedBehavior.keyboardShortcutsUsed.length > 0 && (
-          <InfoSection title="Shortcuts Used" icon="K">
+          <InfoSection title="Atalhos Usados" icon="K">
             {client.advancedBehavior.keyboardShortcutsUsed.slice(0, 10).map((shortcut) => (
-              <InfoRow key={shortcut} label={shortcut} value="Used" />
+              <InfoRow key={shortcut} label={shortcut} value="Usado" />
             ))}
           </InfoSection>
         )}
@@ -1351,23 +1351,23 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
         {/* Privacy Tips */}
         {isCurrentUser && (
           <div className="privacy-tips">
-            <h3>Privacy Tips</h3>
+            <h3>Dicas de Privacidade</h3>
             <ul>
-              <li>Use a VPN to mask your IP address</li>
-              <li>Enable Do Not Track in your browser</li>
-              <li>Use privacy-focused browsers like Firefox or Brave</li>
-              <li>Consider using browser extensions to block fingerprinting</li>
-              <li>Disable WebRTC to prevent local IP leaks</li>
-              <li>Regularly clear cookies and browsing data</li>
-              <li>Use Tor Browser for maximum anonymity</li>
-              <li>Your mouse movements, typing patterns, and scroll behavior create a unique fingerprint!</li>
+              <li>Use uma VPN para mascarar seu endereço IP</li>
+              <li>Habilite Não Rastrear no seu navegador</li>
+              <li>Use navegadores focados em privacidade como Firefox ou Brave</li>
+              <li>Considere usar extensões do navegador para bloquear fingerprinting</li>
+              <li>Desabilite WebRTC para prevenir vazamentos de IP local</li>
+              <li>Limpe regularmente cookies e dados de navegação</li>
+              <li>Use o Tor Browser para máxima anonimidade</li>
+              <li>Seus movimentos do mouse, padrões de digitação e comportamento de scroll criam uma impressão digital única!</li>
             </ul>
           </div>
         )}
       </div>
 
       <div className="info-panel-footer">
-        <span className="connected-time">Connected {formatTimestamp(visitor.connectedAt)}</span>
+        <span className="connected-time">Conectado {formatTimestamp(visitor.connectedAt)}</span>
       </div>
     </div>
   );
@@ -1375,9 +1375,9 @@ export function InfoPanel({ visitor, isCurrentUser, onClose, aiLoading }: InfoPa
 
 function formatTimestamp(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 60) return `há ${seconds}s`;
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return `há ${minutes}min`;
   const hours = Math.floor(minutes / 60);
-  return `${hours}h ago`;
+  return `há ${hours}h`;
 }

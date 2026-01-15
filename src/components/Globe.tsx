@@ -5,6 +5,7 @@
 
 import { useEffect, useRef } from 'react';
 import * as Cesium from 'cesium';
+// @ts-ignore - Cesium CSS is handled by vite-plugin-cesium
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import type { VisitorInfo, GlobePoint } from '../types';
 

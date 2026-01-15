@@ -1,13 +1,21 @@
 {
-  "name": "yourinfo",
+  "name": "youare",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.01",
+  "author": "Grupo Murad",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:restart": "docker-compose restart",
+    "docker:ps": "docker-compose ps",
+    "docker:clean": "docker-compose down -v && docker system prune -f"
   },
   "dependencies": {
     "@cesium/widgets": "^14.1.0",

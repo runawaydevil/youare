@@ -1,7 +1,7 @@
 /**
- * Ad Auction Component
- * Shows simulated RTB auction results - How companies bid to show you ads
- * TRANSPARENT: This is a simulation for educational purposes
+ * Componente de Leilão de Anúncios
+ * Mostra resultados simulados de leilão RTB - Como empresas fazem lances para mostrar anúncios
+ * TRANSPARENTE: Esta é uma simulação para fins educacionais
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -49,7 +49,7 @@ export function AdAuction({ visitor }: AdAuctionProps) {
   const noBids = auctionResult?.bids.filter(b => b.status === 'no-bid') || [];
 
   // Get country info
-  const country = visitor?.server?.geo?.country || 'Unknown';
+  const country = visitor?.server?.geo?.country || 'Desconhecido';
   const countryCode = visitor?.server?.geo?.countryCode || '';
 
   return (
@@ -61,18 +61,18 @@ export function AdAuction({ visitor }: AdAuctionProps) {
       >
         <span className="mobile-bar-left">
           <span className="live-dot"></span>
-          <span className="mobile-bar-label">You're Worth:</span>
+          <span className="mobile-bar-label">Você Vale:</span>
           {auctionResult?.winner && auctionResult.aiPowered ? (
             <>
               <span className="mobile-bar-value">${auctionResult.winner.cpm.toFixed(2)}</span>
-              <span className="mobile-bar-company">for {auctionResult.winner.bidderName}</span>
+              <span className="mobile-bar-company">para {auctionResult.winner.bidderName}</span>
             </>
           ) : auctionResult && !auctionResult.aiPowered ? (
-            <span className="mobile-bar-loading">AI unavailable</span>
+            <span className="mobile-bar-loading">IA indisponível</span>
           ) : isLoading ? (
-            <span className="mobile-bar-loading">Calculating...</span>
+            <span className="mobile-bar-loading">Calculando...</span>
           ) : (
-            <span className="mobile-bar-loading">Loading profile...</span>
+            <span className="mobile-bar-loading">Carregando perfil...</span>
           )}
         </span>
         <span className="mobile-bar-right">
@@ -84,10 +84,10 @@ export function AdAuction({ visitor }: AdAuctionProps) {
       <div className="auction-panel-header desktop-only">
         <div className="auction-panel-title">
           <span className="live-dot"></span>
-          <h2>Ad Auction</h2>
+          <h2>Leilão de Anúncios</h2>
         </div>
         <p className="auction-panel-subtitle">
-          {auctionResult ? `${auctionResult.totalBidders} companies bidding for your attention` : 'Companies bidding for your attention'}
+          {auctionResult ? `${auctionResult.totalBidders} empresas fazendo lances pela sua atenção` : 'Empresas fazendo lances pela sua atenção'}
         </p>
       </div>
 
@@ -101,8 +101,8 @@ export function AdAuction({ visitor }: AdAuctionProps) {
               <div className="bid-pulse delay-1"></div>
               <div className="bid-pulse delay-2"></div>
             </div>
-            <span className="loading-text">Analyzing your profile...</span>
-            <span className="loading-count">AI selecting relevant bidders for your location</span>
+            <span className="loading-text">Analisando seu perfil...</span>
+            <span className="loading-count">IA selecionando licitantes relevantes para sua localização</span>
           </div>
         )}
 
@@ -114,8 +114,8 @@ export function AdAuction({ visitor }: AdAuctionProps) {
               <div className="bid-pulse delay-1"></div>
               <div className="bid-pulse delay-2"></div>
             </div>
-            <span className="loading-text">Gathering your data...</span>
-            <span className="loading-count">Fingerprinting in progress</span>
+            <span className="loading-text">Coletando seus dados...</span>
+            <span className="loading-count">Fingerprinting em andamento</span>
           </div>
         )}
 
@@ -125,11 +125,11 @@ export function AdAuction({ visitor }: AdAuctionProps) {
             {/* Winner Card */}
             {auctionResult.winner && (
               <div className="winner-card">
-                <div className="winner-card-badge"><span className="icon-trophy"></span> HIGHEST BIDDER</div>
+                <div className="winner-card-badge"><span className="icon-trophy"></span> MAIOR LANCE</div>
                 <div className="winner-card-content">
                   <div className="winner-card-name">{auctionResult.winner.bidderName}</div>
                   <div className="winner-card-bid">{formatCPM(auctionResult.winner.cpm)}</div>
-                  <div className="winner-card-unit">per 1,000 impressions (CPM)</div>
+                  <div className="winner-card-unit">por 1.000 impressões (CPM)</div>
                 </div>
                 <div className="winner-card-reason">
                   "{auctionResult.winner.reason}"
@@ -144,7 +144,7 @@ export function AdAuction({ visitor }: AdAuctionProps) {
                   className="value-breakdown-header"
                   onClick={() => setShowValueBreakdown(!showValueBreakdown)}
                 >
-                  <span><span className="icon-chart"></span> Why This Price?</span>
+                  <span><span className="icon-chart"></span> Por Que Este Preço?</span>
                   <span className="expand-icon">{showValueBreakdown ? '−' : '+'}</span>
                 </button>
 
@@ -173,11 +173,11 @@ export function AdAuction({ visitor }: AdAuctionProps) {
             <div className="auction-stats-row">
               <div className="stat-box">
                 <span className="stat-number">{activeBids.length}</span>
-                <span className="stat-text">Bidders</span>
+                <span className="stat-text">Licitantes</span>
               </div>
               <div className="stat-box">
                 <span className="stat-number">{noBids.length}</span>
-                <span className="stat-text">No Bid</span>
+                <span className="stat-text">Sem Lance</span>
               </div>
               <div className="stat-box country-stat">
                 <span className="stat-number">{countryCode || '??'}</span>
@@ -191,7 +191,7 @@ export function AdAuction({ visitor }: AdAuctionProps) {
                 className="bids-header-btn"
                 onClick={() => setShowAllBids(!showAllBids)}
               >
-                <span>All Bids ({activeBids.length})</span>
+                <span>Todos os Lances ({activeBids.length})</span>
                 <span className="expand-icon">{showAllBids ? '−' : '+'}</span>
               </button>
 
@@ -209,7 +209,7 @@ export function AdAuction({ visitor }: AdAuctionProps) {
                   {/* No-bids */}
                   {noBids.length > 0 && (
                     <div className="failed-bids">
-                      <div className="failed-bids-header">Didn't Bid:</div>
+                      <div className="failed-bids-header">Não Fizeram Lance:</div>
                       {noBids.slice(0, 5).map((bid, index) => (
                         <div key={`nobid-${index}`} className="failed-bid-row">
                           <span className="failed-name">{bid.bidderName}</span>
@@ -218,7 +218,7 @@ export function AdAuction({ visitor }: AdAuctionProps) {
                       ))}
                       {noBids.length > 5 && (
                         <div className="failed-bid-row more">
-                          +{noBids.length - 5} more companies didn't bid
+                          +{noBids.length - 5} empresas a mais não fizeram lance
                         </div>
                       )}
                     </div>
@@ -230,12 +230,12 @@ export function AdAuction({ visitor }: AdAuctionProps) {
             {/* Explanation */}
             <div className="auction-info-box">
               <p>
-                <strong><span className="icon-bolt"></span> This happens in &lt;100ms</strong> every time you visit a site with ads.
-                Your data is sold to the highest bidder before the page even loads.
+                <strong><span className="icon-bolt"></span> Isso acontece em &lt;100ms</strong> toda vez que você visita um site com anúncios.
+                Seus dados são vendidos ao maior licitante antes mesmo da página carregar.
               </p>
               <p className="ai-note">
-                <span className="icon-sparkle"></span> Simulated bids generated by AI based on your real profile data
-                <span className="ai-note-explain">(Real RTB auctions require publisher licenses, SSP/DSP contracts, and IAB certification. This demo visualizes what happens behind closed doors using AI to generate realistic bids based on your actual fingerprint data.)</span>
+                <span className="icon-sparkle"></span> Lances simulados gerados por IA baseados nos seus dados reais de perfil
+                <span className="ai-note-explain">(Leilões RTB reais requerem licenças de editor, contratos SSP/DSP e certificação IAB. Esta demonstração visualiza o que acontece a portas fechadas usando IA para gerar lances realistas baseados nos seus dados reais de fingerprint.)</span>
               </p>
             </div>
           </>
@@ -245,8 +245,8 @@ export function AdAuction({ visitor }: AdAuctionProps) {
         {auctionResult && !isLoading && !auctionResult.aiPowered && (
           <div className="auction-error-state">
             <div className="error-icon">!</div>
-            <p className="error-text">AI auction temporarily unavailable</p>
-            <p className="error-subtext">Check out your real ad profiles below</p>
+            <p className="error-text">Leilão de IA temporariamente indisponível</p>
+            <p className="error-subtext">Confira seus perfis de anúncios reais abaixo</p>
           </div>
         )}
 
@@ -257,14 +257,14 @@ export function AdAuction({ visitor }: AdAuctionProps) {
             onClick={() => setShowPreferences(!showPreferences)}
           >
             <span className="icon-search"></span>
-            <span>See Your Real Ad Profiles</span>
+            <span>Veja Seus Perfis de Anúncios Reais</span>
             <span className="expand-icon">{showPreferences ? '−' : '+'}</span>
           </button>
 
           {showPreferences && (
             <div className="preferences-links-list">
               <p className="prefs-intro">
-                These companies have profiles about you. See what they know:
+                Essas empresas têm perfis sobre você. Veja o que elas sabem:
               </p>
               {Object.values(AD_PREFERENCE_PAGES).map((page) => (
                 <a
@@ -316,7 +316,7 @@ function BidRow({ bid, isWinner, rank }: BidRowProps) {
       <span className={`bid-category-tag ${bid.category}`}>
         <span className={`icon-category icon-${bid.category}`}></span>
       </span>
-      {isWinner && <span className="winner-tag">WON</span>}
+      {isWinner && <span className="winner-tag">GANHOU</span>}
     </div>
   );
 }

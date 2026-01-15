@@ -1,7 +1,8 @@
 /**
- * YourInfo Backend Server
- * Bun + Hono with WebSocket support
- * Supports multiple instances with shared visitor state via Redis
+ * Servidor Backend YouAre
+ * Bun + Hono com suporte a WebSocket
+ * Suporta múltiplas instâncias com estado compartilhado de visitantes via Redis
+ * Desenvolvido por Grupo Murad - 2026
  */
 
 import { Hono } from 'hono';
@@ -43,7 +44,7 @@ const connections = new Map<string, WebSocket>();
 // Initialize shared visitors via Redis
 initSharedVisitors().then((connected) => {
   if (connected) {
-    console.log('Shared visitor state enabled (Redis connected)');
+    console.log('Estado compartilhado de visitantes habilitado (Redis conectado)');
 
     // Listen for events from other instances
     onVisitorEvent((event) => {
@@ -69,7 +70,7 @@ initSharedVisitors().then((connected) => {
       }
     });
   } else {
-    console.log('Running in single-instance mode (Redis not available)');
+    console.log('Executando em modo de instância única (Redis não disponível)');
   }
 });
 
@@ -92,7 +93,7 @@ app.get('/api/visitor/:id', (c) => {
   const id = c.req.param('id');
   const visitor = localVisitors.get(id) || allVisitors.get(id);
   if (!visitor) {
-    return c.json({ error: 'Visitor not found' }, 404);
+      return c.json({ error: 'Visitante não encontrado' }, 404);
   }
   return c.json(visitor);
 });
@@ -125,7 +126,7 @@ app.post('/api/profile', async (c) => {
     const clientInfo = body.clientInfo as Partial<ClientInfo>;
 
     if (!clientInfo) {
-      return c.json({ error: 'clientInfo required' }, 400);
+      return c.json({ error: 'clientInfo é obrigatório' }, 400);
     }
 
     // Get IP and geo data for more accurate profiling
@@ -150,7 +151,7 @@ app.post('/api/profile', async (c) => {
     });
   } catch (err) {
     console.error('Profile endpoint error:', err);
-    return c.json({ error: 'Internal server error', source: 'fallback' }, 500);
+      return c.json({ error: 'Erro interno do servidor', source: 'fallback' }, 500);
   }
 });
 
@@ -161,7 +162,7 @@ app.post('/api/ai-auction', async (c) => {
     const { profileSummary, country, countryCode } = body;
 
     if (!profileSummary) {
-      return c.json({ error: 'profileSummary required' }, 400);
+      return c.json({ error: 'profileSummary é obrigatório' }, 400);
     }
 
     const result = await generateAIAuction(
@@ -408,7 +409,7 @@ const server = Bun.serve({
         id
       );
 
-      console.log(`Visitor connected: ${id} from ${ip} (${serverInfo.geo?.city || 'Unknown'})`);
+      console.log(`Visitante conectado: ${id} de ${ip} (${serverInfo.geo?.city || 'Desconhecido'})`);
     },
 
     message(ws, message) {
@@ -474,11 +475,11 @@ const server = Bun.serve({
           });
         }
 
-        console.log(`Visitor disconnected: ${visitorId}`);
+        console.log(`Visitante desconectado: ${visitorId}`);
       }
     },
   },
 });
 
-console.log(`YourInfo server running on port ${PORT}`);
-console.log(`WebSocket endpoint: ws://localhost:${PORT}/ws`);
+console.log(`Servidor YouAre rodando na porta ${PORT}`);
+console.log(`Endpoint WebSocket: ws://localhost:${PORT}/ws`);

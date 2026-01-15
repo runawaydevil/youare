@@ -1,0 +1,74 @@
+
+services:
+  # Redis service for caching and tracking
+  redis:
+    image: redis:7-alpine
+    container_name: youare-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - youare-network
+
+  # Application service (Bun + Hono)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: youare-app
+    restart: unless-stopped
+    environment:
+      - PORT=3020
+      - REDIS_URL=redis://redis:6379
+      - GROK_API_KEY=${GROK_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+    volumes:
+      - ./data:/app/data:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - youare-network
+    healthcheck:
+      test: ["CMD", "bun", "--eval", "fetch('http://localhost:3020/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx reverse proxy
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    container_name: youare-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - youare-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  youare-network:
+    driver: bridge

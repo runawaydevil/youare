@@ -378,9 +378,9 @@ function getCanvasFingerprint(): string {
       ctx.fillStyle = '#f60';
       ctx.fillRect(125, 1, 62, 20);
       ctx.fillStyle = '#069';
-      ctx.fillText('YourInfo <canvas> 1.0', 2, 15);
+      ctx.fillText('YouAre <canvas> 0.01', 2, 15);
       ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
-      ctx.fillText('YourInfo <canvas> 1.0', 4, 17);
+      ctx.fillText('YouAre <canvas> 0.01', 4, 17);
 
       // Add some gradients and arcs
       ctx.beginPath();
@@ -788,7 +788,7 @@ function getGlobalPrivacyControl(): boolean | null {
  */
 function isLocalStorageEnabled(): boolean {
   try {
-    const key = '__yourinfo_test__';
+    const key = '__youare_test__';
     localStorage.setItem(key, 'test');
     localStorage.removeItem(key);
     return true;
@@ -802,7 +802,7 @@ function isLocalStorageEnabled(): boolean {
  */
 function isSessionStorageEnabled(): boolean {
   try {
-    const key = '__yourinfo_test__';
+    const key = '__youare_test__';
     sessionStorage.setItem(key, 'test');
     sessionStorage.removeItem(key);
     return true;

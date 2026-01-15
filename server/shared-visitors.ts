@@ -1,5 +1,5 @@
 /**
- * Shared visitor state across multiple instances using Redis
+ * Estado compartilhado de visitantes entre múltiplas instâncias usando Redis
  */
 
 import { createClient, type RedisClientType } from 'redis';
@@ -7,8 +7,8 @@ import type { VisitorInfo } from '../src/types';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 const INSTANCE_ID = `instance_${process.env.PORT || '3020'}_${Date.now().toString(36)}`;
-const VISITORS_KEY = 'yourinfo:visitors';
-const VISITOR_CHANNEL = 'yourinfo:visitor_events';
+const VISITORS_KEY = 'youare:visitors';
+const VISITOR_CHANNEL = 'youare:visitor_events';
 const VISITOR_TTL = 300; // 5 minutes TTL for visitor data
 
 let pubClient: RedisClientType | null = null;

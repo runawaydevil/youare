@@ -1,6 +1,10 @@
+// @ts-nocheck
 /**
  * WebGPU Fingerprinting Module
  * Collects GPU-specific information using the WebGPU API for browser fingerprinting
+ * 
+ * Note: @ts-nocheck is used because this file manually declares WebGPU types
+ * that may conflict with DOM lib types in TypeScript
  */
 
 // WebGPU type declarations for environments without @webgpu/types

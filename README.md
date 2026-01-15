@@ -1,117 +1,117 @@
-# YourInfo
+# YouAre
 
-**Live Demo: [yourinfo.hsingh.app](https://yourinfo.hsingh.app/)**
+**Demonstração ao Vivo: [youare.grupomurad.com](https://youare.grupomurad.com/)**
 
-A privacy awareness demonstration that shows what information websites can collect about you through browser fingerprinting and behavioral analysis.
+Uma demonstração de conscientização sobre privacidade que mostra quais informações os sites podem coletar sobre você através de fingerprinting de navegador e análise comportamental.
 
-## Features
+## Recursos
 
-- **Browser Fingerprinting**: Canvas, WebGL, audio, fonts, and more
-- **Cross-Browser Tracking**: Hardware-based identification that works across different browsers
-- **Real-time Behavior Tracking**: Mouse movements, scroll patterns, typing behavior
-- **Device Detection**: GPU, CPU cores, RAM, screen resolution
-- **AI-Powered Profiling**: Uses Grok AI to infer personal details from fingerprint data
-- **Interactive 3D Globe**: See other visitors in real-time with CesiumJS
-- **Privacy Detection**: VPN, ad blocker, incognito mode detection
+- **Fingerprinting de Navegador**: Canvas, WebGL, áudio, fontes e muito mais
+- **Rastreamento Cross-Browser**: Identificação baseada em hardware que funciona entre diferentes navegadores
+- **Rastreamento de Comportamento em Tempo Real**: Movimentos do mouse, padrões de scroll, comportamento de digitação
+- **Detecção de Dispositivo**: GPU, núcleos da CPU, RAM, resolução da tela
+- **Perfil com IA**: Usa Grok AI para inferir detalhes pessoais a partir de dados de fingerprint
+- **Globo 3D Interativo**: Veja outros visitantes em tempo real com CesiumJS
+- **Detecção de Privacidade**: VPN, bloqueador de anúncios, detecção de modo anônimo
 
-## Tech Stack
+## Stack Tecnológico
 
 - **Frontend**: React + TypeScript + Vite
 - **Backend**: Bun + Hono
-- **Real-time**: WebSocket
-- **Globe**: CesiumJS with OpenStreetMap tiles
-- **AI**: Grok (X.AI) for user profiling (optional)
-- **Cache**: Redis for profile caching and unique visitor tracking (optional)
+- **Tempo Real**: WebSocket
+- **Globo**: CesiumJS com tiles do OpenStreetMap
+- **IA**: Grok (X.AI) para perfil de usuário (opcional)
+- **Cache**: Redis para cache de perfis e rastreamento de visitantes únicos (opcional)
 
-## Getting Started
+## Começando
 
-### Prerequisites
+### Pré-requisitos
 
-- [Bun](https://bun.sh/) runtime
-- Redis (optional, for caching)
-- Grok API key (optional, for AI profiling)
+- Runtime [Bun](https://bun.sh/)
+- Redis (opcional, para cache)
+- Chave da API Grok (opcional, para perfil com IA)
 
-### Installation
+### Instalação
 
 ```bash
-# Clone the repository
-git clone https://github.com/siinghd/yourinfo.git
-cd yourinfo
+# Clone o repositório
+git clone https://github.com/runawaydevil/youare.git
+cd youare
 
-# Install dependencies
+# Instale as dependências
 bun install
 
-# Copy environment file
+# Copie o arquivo de ambiente
 cp .env.example .env
 
-# Edit .env with your configuration
+# Edite .env com sua configuração
 ```
 
-### Development
+### Desenvolvimento
 
 ```bash
-# Start development server (frontend + backend)
+# Inicie o servidor de desenvolvimento (frontend + backend)
 bun run dev
 ```
 
-### Production
+### Produção
 
 ```bash
-# Build frontend
+# Construa o frontend
 bun run build
 
-# Start production server
+# Inicie o servidor de produção
 bun run server/index.ts
 ```
 
-## Environment Variables
+## Variáveis de Ambiente
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `PORT` | Backend server port | Yes |
-| `VITE_WS_PORT` | WebSocket port for dev | Yes |
-| `REDIS_URL` | Redis connection URL | No |
-| `GROK_API_KEY` | Grok API key for AI profiling | No |
+| Variável | Descrição | Obrigatório |
+|----------|-----------|-------------|
+| `PORT` | Porta do servidor backend | Sim |
+| `VITE_WS_PORT` | Porta WebSocket para dev | Sim |
+| `REDIS_URL` | URL de conexão Redis | Não |
+| `GROK_API_KEY` | Chave da API Grok para perfil com IA | Não |
 
-## What Information Is Collected
+## Quais Informações São Coletadas
 
 ### Hardware
-- Screen resolution, color depth, pixel ratio
-- CPU cores, RAM (capped at 8GB by browsers)
-- GPU vendor and model
-- Touch screen capability
+- Resolução da tela, profundidade de cor, razão de pixels
+- Núcleos da CPU, RAM (limitado a 8GB pelos navegadores)
+- Fabricante e modelo da GPU
+- Capacidade de tela touch
 
-### Browser
-- User agent, platform, language
-- Installed fonts
-- Canvas and WebGL fingerprints
-- Audio processing fingerprint
-- Supported codecs and DRM
+### Navegador
+- User agent, plataforma, idioma
+- Fontes instaladas
+- Impressões digitais Canvas e WebGL
+- Impressão digital de processamento de áudio
+- Codecs e DRM suportados
 
-### Behavior
-- Mouse speed, acceleration, movement patterns
-- Scroll depth and direction changes
-- Typing speed and key hold times
-- Tab switching and focus time
-- Rage clicks and exit intent
+### Comportamento
+- Velocidade do mouse, aceleração, padrões de movimento
+- Profundidade de scroll e mudanças de direção
+- Velocidade de digitação e tempos de pressionamento de teclas
+- Troca de abas e tempo de foco
+- Cliques de raiva e intenção de saída
 
-### Network
-- IP address and geolocation
-- Connection type and speed
-- WebRTC local IPs
-- VPN/proxy detection
+### Rede
+- Endereço IP e geolocalização
+- Tipo e velocidade de conexão
+- IPs locais WebRTC
+- Detecção de VPN/proxy
 
-## Deployment
+## Deploy
 
-### With nginx
+### Com nginx
 
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name yourinfo.example.com;
+    server_name youare.example.com;
 
     location / {
-        root /path/to/yourinfo/dist;
+        root /path/to/youare/dist;
         try_files $uri $uri/ /index.html;
     }
 
@@ -132,23 +132,29 @@ server {
 }
 ```
 
-### With PM2
+### Com PM2
 
 ```bash
-pm2 start bun --name yourinfo -- run server/index.ts
+pm2 start bun --name youare -- run server/index.ts
 ```
 
-## Privacy Tips
+## Dicas de Privacidade
 
-This demo is meant to raise awareness about online tracking. To protect your privacy:
+Esta demonstração tem como objetivo aumentar a conscientização sobre rastreamento online. Para proteger sua privacidade:
 
-1. Use a VPN to mask your IP address
-2. Enable Do Not Track in your browser
-3. Use privacy-focused browsers like Firefox or Brave
-4. Install browser extensions to block fingerprinting
-5. Disable WebRTC to prevent local IP leaks
-6. Use Tor Browser for maximum anonymity
+1. Use uma VPN para mascarar seu endereço IP
+2. Habilite Não Rastrear no seu navegador
+3. Use navegadores focados em privacidade como Firefox ou Brave
+4. Instale extensões do navegador para bloquear fingerprinting
+5. Desabilite WebRTC para prevenir vazamentos de IP local
+6. Use o Tor Browser para máxima anonimidade
 
-## License
+## Licença
 
 MIT
+
+## Créditos
+
+Desenvolvido por **Grupo Murad** - 2026
+
+Versão: 0.01

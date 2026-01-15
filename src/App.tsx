@@ -1,6 +1,7 @@
 /**
- * YourInfo - Privacy Awareness Globe
- * Main application component
+ * YouAre - Globo de Conscientização sobre Privacidade
+ * Componente principal da aplicação
+ * Desenvolvido por Grupo Murad - 2026
  */
 
 import { useState, useCallback, useMemo } from 'react';
@@ -44,7 +45,7 @@ export default function App() {
       <header className="app-header">
         <div className="app-logo">
           <span className="logo-icon">!?</span>
-          <h1>Your Info</h1>
+          <h1>Suas Informações</h1>
         </div>
         <div className="app-stats">
           <div className="stat">
@@ -57,7 +58,7 @@ export default function App() {
           </div>
           <div className={`connection-status ${connected ? 'connected' : 'disconnected'}`}>
             <span className="status-dot" />
-            {connected ? 'Live' : 'Connecting...'}
+            {connected ? 'Ao Vivo' : 'Conectando...'}
           </div>
         </div>
       </header>
@@ -67,16 +68,8 @@ export default function App() {
         <div className="ai-credits-banner">
           <span className="banner-icon">:(</span>
           <span className="banner-text">
-            AI credits exhausted! Help bring back AI-powered insights with a small tip:
+            Créditos de IA esgotados! O sistema está usando análise baseada em regras.
           </span>
-          <a
-            href="https://www.paypal.com/paypalme/hsiingh"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="banner-link"
-          >
-            Donate via PayPal
-          </a>
         </div>
       )}
 
@@ -105,9 +98,9 @@ export default function App() {
       {/* Footer */}
       <footer className="app-footer">
         <p>
-          This site demonstrates what information websites can collect about you.
-          <a href="https://github.com/siinghd/yourinfo" target="_blank" rel="noopener noreferrer">
-            View on GitHub
+          Este site demonstra quais informações os sites podem coletar sobre você.
+          <a href="https://github.com/runawaydevil/youare" target="_blank" rel="noopener noreferrer">
+            Ver no GitHub
           </a>
         </p>
       </footer>
