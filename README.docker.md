@@ -28,7 +28,9 @@ cp .env.docker.example .env.docker
 
 Edite `.env.docker` e configure:
 
-- `GROK_API_KEY`: Chave da API Grok (opcional, para perfil com IA)
+- `OPENAI_API_KEY`: Chave da API OpenAI (opcional, primário para perfil com IA)
+- `OPENAI_MODEL`: Modelo OpenAI a usar (padrão: gpt-4-turbo-preview)
+- `GROK_API_KEY`: Chave da API Grok (opcional, fallback de IA)
 - `OPENROUTER_API_KEY`: Chave da API OpenRouter (opcional, fallback de IA)
 
 ### 2. Verificar Arquivo de Dados
@@ -86,7 +88,9 @@ O nginx expõe as portas:
 - **80**: HTTP
 - **443**: HTTPS (quando SSL estiver configurado)
 
-Certifique-se de que essas portas estão abertas no firewall do servidor.
+A aplicação backend roda internamente na porta **9945** (não exposta diretamente).
+
+Certifique-se de que as portas 80 e 443 estão abertas no firewall do servidor.
 
 ## Configuração SSL/HTTPS
 
@@ -142,7 +146,7 @@ Se você já tem certificados SSL:
 
 Todos os serviços têm health checks configurados:
 
-- **app**: `http://localhost:3020/health`
+- **app**: `http://localhost:9945/health`
 - **redis**: `redis-cli ping`
 - **nginx**: `http://localhost/health`
 
@@ -249,6 +253,25 @@ docker cp youare-redis:/data/dump.rdb ./backup/
 ### Arquivos Estáticos
 
 Os arquivos estáticos estão em `dist/` e são gerados durante o build. Não é necessário backup separado.
+
+## Medidas Anti-Rastreamento
+
+O sistema implementa medidas completas para evitar rastreamento por motores de busca:
+
+- **Meta Tags HTML**: `noindex, nofollow, noarchive, nosnippet, noimageindex, nocache`
+- **robots.txt**: Bloqueia todos os principais crawlers (Google, Bing, DuckDuckGo, etc.)
+- **Headers HTTP**: `X-Robots-Tag` em todas as respostas do servidor e nginx
+
+O site não deve aparecer em resultados de busca.
+
+## Ordem de Fallback de IA
+
+O sistema tenta as IAs na seguinte ordem:
+
+1. **OpenAI GPT-4** (primário) - se configurado
+2. **Grok (X.AI)** (fallback 1) - se OpenAI falhar ou não estiver configurado
+3. **MiMo via OpenRouter** (fallback 2) - se Grok falhar ou não estiver configurado
+4. **Fallback baseado em regras** - se todas as IAs falharem ou não estiverem configuradas
 
 ## Produção
 

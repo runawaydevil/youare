@@ -21,9 +21,23 @@ const BLACK = Cesium.Color.BLACK;
 
 /** Convert visitor to globe point */
 function visitorToPoint(visitor: VisitorInfo, isCurrentUser: boolean): GlobePoint | null {
-  if (!visitor.server.geo) return null;
+  console.log(`[Globe] Converting visitor ${visitor.id}:`, {
+    hasServer: !!visitor.server,
+    hasGeo: !!visitor.server?.geo,
+    geo: visitor.server?.geo,
+  });
+  
+  if (!visitor.server?.geo) {
+    console.log(`[Globe] Visitor ${visitor.id} has no geo data, skipping`);
+    return null;
+  }
 
-  return {
+  if (typeof visitor.server.geo.lat !== 'number' || typeof visitor.server.geo.lng !== 'number') {
+    console.log(`[Globe] Visitor ${visitor.id} has invalid lat/lng:`, visitor.server.geo);
+    return null;
+  }
+
+  const point = {
     id: visitor.id,
     lat: visitor.server.geo.lat,
     lng: visitor.server.geo.lng,
@@ -31,6 +45,10 @@ function visitorToPoint(visitor: VisitorInfo, isCurrentUser: boolean): GlobePoin
     color: isCurrentUser ? '#FFE500' : '#000000',
     visitor,
   };
+  
+  console.log(`[Globe] Created point for ${visitor.id}: lat=${point.lat}, lng=${point.lng}`);
+  
+  return point;
 }
 
 export function Globe({ visitors, currentVisitorId, onVisitorClick }: GlobeComponentProps) {
@@ -241,6 +259,8 @@ export function Globe({ visitors, currentVisitorId, onVisitorClick }: GlobeCompo
     const points = visitors
       .map((v) => visitorToPoint(v, v.id === currentVisitorId))
       .filter((p): p is GlobePoint => p !== null);
+    
+    console.log(`[Globe] Updating ${points.length} points from ${visitors.length} visitors (currentVisitorId: ${currentVisitorId})`);
 
     // Remove old visitor entities
     const currentIds = new Set(points.map(p => p.id));
@@ -305,26 +325,46 @@ export function Globe({ visitors, currentVisitorId, onVisitorClick }: GlobeCompo
     if (currentVisitorId) {
       const currentPoint = points.find(p => p.id === currentVisitorId);
       if (currentPoint) {
+        console.log(`[Globe] Drawing arcs from current user (${currentVisitorId}) to ${points.length - 1} other visitors`);
         points.forEach(point => {
           if (point.id !== currentVisitorId) {
+            // Validate coordinates before creating arc
+            if (
+              isNaN(currentPoint.lat) || isNaN(currentPoint.lng) ||
+              isNaN(point.lat) || isNaN(point.lng) ||
+              currentPoint.lat < -90 || currentPoint.lat > 90 ||
+              point.lat < -90 || point.lat > 90 ||
+              currentPoint.lng < -180 || currentPoint.lng > 180 ||
+              point.lng < -180 || point.lng > 180
+            ) {
+              console.warn(`[Globe] Invalid coordinates for arc: from (${currentPoint.lat}, ${currentPoint.lng}) to (${point.lat}, ${point.lng})`);
+              return;
+            }
+
             const arcEntity = viewer.entities.add({
               polyline: {
                 positions: Cesium.Cartesian3.fromDegreesArray([
                   currentPoint.lng, currentPoint.lat,
                   point.lng, point.lat,
                 ]),
-                width: 2,
+                width: 4,
                 material: new Cesium.PolylineGlowMaterialProperty({
-                  glowPower: 0.2,
+                  glowPower: 0.6,
                   color: YELLOW,
                 }),
                 arcType: Cesium.ArcType.GEODESIC,
               },
             });
             arcEntitiesRef.current.push(arcEntity);
+            console.log(`[Globe] Arc created from (lat=${currentPoint.lat}, lng=${currentPoint.lng}) to (lat=${point.lat}, lng=${point.lng})`);
+            console.log(`[Globe] Arc Cesium coords: [lng=${currentPoint.lng}, lat=${currentPoint.lat}, height=100000] -> [lng=${point.lng}, lat=${point.lat}, height=100000]`);
           }
         });
+      } else {
+        console.log(`[Globe] Current visitor point not found for ID: ${currentVisitorId}`);
       }
+    } else {
+      console.log('[Globe] No currentVisitorId, skipping arc drawing');
     }
   }, [visitors, currentVisitorId]);
 

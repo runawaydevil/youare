@@ -30,7 +30,7 @@ import type {
 } from '../src/types';
 
 const app = new Hono();
-const PORT = parseInt(process.env.PORT || '3020', 10);
+const PORT = parseInt(process.env.PORT || '9945', 10);
 
 /** Local visitors map (this instance only) */
 const localVisitors = new Map<string, VisitorInfo>();
@@ -77,14 +77,33 @@ initSharedVisitors().then((connected) => {
 // Enable CORS for development
 app.use('*', cors());
 
-/** Health check endpoint */
+// Add X-Robots-Tag header to all responses
+app.use('*', async (c, next) => {
+  await next();
+  c.header('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet, noimageindex');
+});
+
+/** Health check endpoint - responds quickly without blocking on external services */
 app.get('/health', async (c) => {
-  const sharedCount = await getSharedOnlineCount();
+  // Don't wait for Redis if it's slow - just check if it exists
+  const redisConnected = isSharedVisitorsConnected();
+  let sharedCount: number | null = null;
+  
+  // Try to get shared count but don't wait more than 1 second
+  try {
+    const countPromise = getSharedOnlineCount();
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1000));
+    sharedCount = await Promise.race([countPromise, timeoutPromise]);
+  } catch (err) {
+    // Ignore errors - health check should always respond
+  }
+
   return c.json({
     status: 'ok',
     localVisitors: localVisitors.size,
-    totalOnline: sharedCount || allVisitors.size,
-    redisConnected: isSharedVisitorsConnected(),
+    totalOnline: sharedCount ?? allVisitors.size,
+    redisConnected,
+    timestamp: Date.now(),
   });
 });
 
@@ -121,6 +140,7 @@ app.get('/api/stats', async (c) => {
 
 /** AI-powered user profiling endpoint */
 app.post('/api/profile', async (c) => {
+  const startTime = Date.now();
   try {
     const body = await c.req.json();
     const clientInfo = body.clientInfo as Partial<ClientInfo>;
@@ -142,7 +162,17 @@ app.post('/api/profile', async (c) => {
       timezone: geoResult.timezone,
     } : undefined;
 
-    const result = await generateAIProfile(clientInfo, geo);
+    // Add timeout wrapper for the entire profile generation
+    const profilePromise = generateAIProfile(clientInfo, geo);
+    const timeoutPromise = new Promise<{ profile: null; source: 'fallback'; error: string }>((resolve) => {
+      setTimeout(() => {
+        resolve({ profile: null, source: 'fallback', error: 'Timeout: Profile generation took too long' });
+      }, 35000); // 35 second timeout
+    });
+
+    const result = await Promise.race([profilePromise, timeoutPromise]);
+    const elapsed = Date.now() - startTime;
+    console.log(`[Profile Endpoint] Resposta em ${elapsed}ms, source: ${result.source}`);
 
     return c.json({
       profile: result.profile,
@@ -150,8 +180,9 @@ app.post('/api/profile', async (c) => {
       error: result.error,
     });
   } catch (err) {
-    console.error('Profile endpoint error:', err);
-      return c.json({ error: 'Erro interno do servidor', source: 'fallback' }, 500);
+    const elapsed = Date.now() - startTime;
+    console.error(`[Profile Endpoint] Erro após ${elapsed}ms:`, err);
+    return c.json({ error: 'Erro interno do servidor', source: 'fallback' }, 500);
   }
 });
 
@@ -171,10 +202,14 @@ app.post('/api/ai-auction', async (c) => {
       countryCode || 'XX'
     );
 
+    const aiPowered = result.source !== 'fallback';
+    console.log(`Leilão endpoint: source=${result.source}, aiPowered=${aiPowered}, bids=${result.bids?.length || 0}`);
+
     return c.json({
       bids: result.bids,
       valueFactors: result.valueFactors,
       source: result.source,
+      aiPowered: aiPowered,
     });
   } catch (err) {
     console.error('AI Auction endpoint error:', err);
@@ -250,8 +285,8 @@ function getRealIP(req: Request, server: { requestIP?: (req: Request) => { addre
 /**
  * Build server info from request
  */
-async function buildServerInfo(req: Request, ip: string): Promise<ServerInfo> {
-  const geo = await getGeolocation(ip);
+async function buildServerInfo(req: Request, ip: string, visitorId?: string): Promise<ServerInfo> {
+  const geo = await getGeolocation(ip, visitorId);
 
   // Extract relevant headers (sanitized)
   const headers: Record<string, string> = {};
@@ -357,11 +392,20 @@ const server = Bun.serve({
 
   websocket: {
     async open(ws) {
-      const { ip, req } = ws.data as { ip: string; req: Request };
+      const { ip: extractedIP, req } = ws.data as { ip: string; req: Request };
+      // Try to get real IP from headers (nginx should set X-Real-IP)
+      const realIP = getRealIP(req, server);
+      console.log(`[WebSocket] IP extraction - extracted: ${extractedIP}, real: ${realIP}, headers:`, {
+        'x-forwarded-for': req.headers.get('x-forwarded-for'),
+        'x-real-ip': req.headers.get('x-real-ip'),
+        'cf-connecting-ip': req.headers.get('cf-connecting-ip'),
+      });
+      // Generate ID before building server info so we can use it for unique coordinates
       const id = generateId();
 
-      // Build visitor info
-      const serverInfo = await buildServerInfo(req, ip);
+      // Build visitor info (pass visitorId for unique coordinates on private IPs)
+      const serverInfo = await buildServerInfo(req, realIP, id);
+      console.log(`[WebSocket] ServerInfo geo for ${realIP}:`, serverInfo.geo);
       const visitor: VisitorInfo = {
         id,
         server: serverInfo,

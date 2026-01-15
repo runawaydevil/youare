@@ -1,32 +1,55 @@
 /**
  * Perfil de Usuário com IA e Cache Redis
- * Usa Grok (X.AI) para analisar dados do usuário e inferir perfil
+ * Usa OpenAI (GPT-4) como primário, Grok (X.AI) e MiMo como fallbacks
  * Desenvolvido por Grupo Murad - 2026
  */
 
 import { createClient, type RedisClientType } from 'redis';
 import type { ClientInfo, UserProfile } from '../src/types';
 
-// Initialize Grok AI (Primary)
+// Initialize OpenAI (Primary)
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4-turbo-preview';
+
+// Initialize Grok AI (Fallback 1)
 const GROK_API_KEY = process.env.GROK_API_KEY;
 const GROK_API_URL = 'https://api.x.ai/v1/chat/completions';
 
-// Initialize OpenRouter with MiMo (Fallback)
+// Initialize OpenRouter with MiMo (Fallback 2)
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MIMO_MODEL = 'xiaomi/mimo-v2-flash:free';
 
-if (GROK_API_KEY) {
-  console.log('Grok AI inicializado (primário)');
+// Validate API configuration on startup
+if (OPENAI_API_KEY) {
+  const keyPreview = OPENAI_API_KEY.length > 11 ? OPENAI_API_KEY.substring(0, 7) + '...' + OPENAI_API_KEY.slice(-4) : '***';
+  console.log(`[Config] OpenAI GPT-4 inicializado (primário) - Model: ${OPENAI_MODEL}, Key: ${keyPreview}`);
 } else {
-  console.warn('GROK_API_KEY não definido - Grok AI desabilitado');
+  console.warn('[Config] OPENAI_API_KEY não definido - OpenAI desabilitado');
+}
+
+if (GROK_API_KEY) {
+  const keyPreview = GROK_API_KEY.length > 11 ? GROK_API_KEY.substring(0, 7) + '...' + GROK_API_KEY.slice(-4) : '***';
+  console.log(`[Config] Grok AI inicializado (fallback 1) - Key: ${keyPreview}`);
+} else {
+  console.warn('[Config] GROK_API_KEY não definido - Grok AI desabilitado');
 }
 
 if (OPENROUTER_API_KEY) {
-  console.log('OpenRouter MiMo inicializado (fallback)');
+  const keyPreview = OPENROUTER_API_KEY.length > 11 ? OPENROUTER_API_KEY.substring(0, 7) + '...' + OPENROUTER_API_KEY.slice(-4) : '***';
+  console.log(`[Config] OpenRouter MiMo inicializado (fallback 2) - Key: ${keyPreview}`);
 } else {
-  console.warn('OPENROUTER_API_KEY não definido - Fallback MiMo desabilitado');
+  console.warn('[Config] OPENROUTER_API_KEY não definido - Fallback MiMo desabilitado');
 }
+
+// Log configuration summary
+const aiProviders = [
+  OPENAI_API_KEY && 'OpenAI',
+  GROK_API_KEY && 'Grok',
+  OPENROUTER_API_KEY && 'MiMo',
+].filter(Boolean);
+console.log(`[Config] Provedores de IA disponíveis: ${aiProviders.length > 0 ? aiProviders.join(', ') : 'Nenhum (usando fallback baseado em regras)'}`);
 
 // Initialize Redis clients (separate for caching and tracking)
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
@@ -43,6 +66,31 @@ let trackingRedisLastError = 0;
 
 // Reduced backoff: 5 seconds instead of 30
 const REDIS_BACKOFF_MS = 5000;
+
+/**
+ * Fetch with timeout helper to prevent hanging requests
+ */
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Request timeout after ${timeoutMs}ms`);
+    }
+    throw error;
+  }
+}
 
 async function createRedisClient(): Promise<RedisClientType> {
   const client = createClient({
@@ -775,7 +823,7 @@ export async function generateAIProfile(clientInfo: Partial<ClientInfo>, geo?: G
   }
 
   // If no AI available at all, use rule-based fallback
-  if (!GROK_API_KEY && !OPENROUTER_API_KEY) {
+  if (!OPENAI_API_KEY && !GROK_API_KEY && !OPENROUTER_API_KEY) {
     console.log('Nenhuma IA configurada - usando fallback baseado em regras');
     const fallbackProfile = generateFallbackProfile(clientInfo, geo);
     return { profile: fallbackProfile, source: 'fallback', error: 'No AI configured' };
@@ -792,37 +840,110 @@ export async function generateAIProfile(clientInfo: Partial<ClientInfo>, geo?: G
   const prompt = buildPrompt(clientInfo, geo);
   const systemMessage = 'You are a user profiling AI for an educational privacy demonstration. Analyze browser fingerprint data and infer personal details. Always respond with valid JSON only, no markdown.';
 
+  // Helper function to call OpenAI
+  async function tryOpenAI(): Promise<{ profile: UserProfile | null; error?: string }> {
+    if (!OPENAI_API_KEY) {
+      return { profile: null, error: 'OpenAI not configured' };
+    }
+
+    const startTime = Date.now();
+    try {
+      console.log(`[OpenAI] Iniciando requisição (timeout: 30s)...`);
+      const response = await fetchWithTimeout(
+        OPENAI_API_URL,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: OPENAI_MODEL,
+            messages: [
+              { role: 'system', content: systemMessage },
+              { role: 'user', content: prompt }
+            ],
+            max_tokens: 4096,
+            temperature: 0.5,
+            response_format: { type: 'json_object' },
+          }),
+        },
+        30000 // 30 second timeout
+      );
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[OpenAI] Resposta recebida em ${elapsed}ms`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[OpenAI] Erro da API: ${response.status} - ${errorText.substring(0, 200)}`);
+        return { profile: null, error: `OpenAI API error: ${response.status}` };
+      }
+
+      const data = await response.json();
+      const text = data.choices?.[0]?.message?.content;
+
+      if (!text) {
+        console.error('[OpenAI] Resposta vazia');
+        return { profile: null, error: 'Empty OpenAI response' };
+      }
+
+      const profile = parseAIResponse(text);
+      if (profile) {
+        console.log(`[OpenAI] Perfil gerado com sucesso em ${Date.now() - startTime}ms`);
+        (profile as UserProfile & { aiGenerated: boolean; aiSource: string }).aiGenerated = true;
+        (profile as UserProfile & { aiSource: string }).aiSource = 'openai';
+        return { profile };
+      }
+
+      return { profile: null, error: 'Failed to parse OpenAI response' };
+    } catch (err) {
+      const elapsed = Date.now() - startTime;
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error(`[OpenAI] Erro após ${elapsed}ms:`, errorMsg);
+      return { profile: null, error: errorMsg };
+    }
+  }
+
   // Helper function to call MiMo via OpenRouter
   async function tryMiMo(): Promise<{ profile: UserProfile | null; error?: string }> {
     if (!OPENROUTER_API_KEY) {
       return { profile: null, error: 'OpenRouter not configured' };
     }
 
+    const startTime = Date.now();
     try {
-      console.log('Tentando fallback MiMo via OpenRouter...');
-      const mimoResponse = await fetch(OPENROUTER_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://youare.grupomurad.com',
-          'X-Title': 'YouAre - Demonstração de Privacidade',
+      console.log(`[MiMo] Iniciando requisição (timeout: 15s)...`);
+      const mimoResponse = await fetchWithTimeout(
+        OPENROUTER_API_URL,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+            'HTTP-Referer': 'https://youare.grupomurad.com',
+            'X-Title': 'YouAre - Demonstração de Privacidade',
+          },
+          body: JSON.stringify({
+            model: MIMO_MODEL,
+            messages: [
+              { role: 'system', content: systemMessage },
+              { role: 'user', content: prompt }
+            ],
+            max_tokens: 4096,
+            temperature: 0.5,
+            reasoning: { enabled: false }, // Disable reasoning for faster responses
+          }),
         },
-        body: JSON.stringify({
-          model: MIMO_MODEL,
-          messages: [
-            { role: 'system', content: systemMessage },
-            { role: 'user', content: prompt }
-          ],
-          max_tokens: 4096,
-          temperature: 0.5,
-          reasoning: { enabled: false }, // Disable reasoning for faster responses
-        }),
-      });
+        15000 // 15 second timeout
+      );
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[MiMo] Resposta recebida em ${elapsed}ms`);
 
       if (!mimoResponse.ok) {
         const errorText = await mimoResponse.text();
-        console.error('MiMo API error:', mimoResponse.status, errorText);
+        console.error(`[MiMo] Erro da API: ${mimoResponse.status} - ${errorText.substring(0, 200)}`);
         return { profile: null, error: `MiMo API error: ${mimoResponse.status}` };
       }
 
@@ -830,12 +951,13 @@ export async function generateAIProfile(clientInfo: Partial<ClientInfo>, geo?: G
       const mimoText = mimoData.choices?.[0]?.message?.content;
 
       if (!mimoText) {
+        console.error('[MiMo] Resposta vazia');
         return { profile: null, error: 'Empty MiMo response' };
       }
 
       const mimoProfile = parseAIResponse(mimoText);
       if (mimoProfile) {
-        console.log('Perfil MiMo gerado com sucesso');
+        console.log(`[MiMo] Perfil gerado com sucesso em ${Date.now() - startTime}ms`);
         (mimoProfile as UserProfile & { aiGenerated: boolean; aiSource: string }).aiGenerated = true;
         (mimoProfile as UserProfile & { aiSource: string }).aiSource = 'mimo';
         return { profile: mimoProfile };
@@ -843,108 +965,112 @@ export async function generateAIProfile(clientInfo: Partial<ClientInfo>, geo?: G
 
       return { profile: null, error: 'Failed to parse MiMo response' };
     } catch (err) {
-      console.error('MiMo error:', err);
-      return { profile: null, error: String(err) };
+      const elapsed = Date.now() - startTime;
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error(`[MiMo] Erro após ${elapsed}ms:`, errorMsg);
+      return { profile: null, error: errorMsg };
     }
   }
 
-  // If Grok is not configured, go straight to MiMo
-  if (!GROK_API_KEY) {
-    console.log('Grok não configurado, usando MiMo diretamente...');
-    const mimoResult = await tryMiMo();
-    if (mimoResult.profile) {
-      await cacheProfile(cacheKey, mimoResult.profile);
-      return { profile: mimoResult.profile, source: 'ai' as const };
+  // Helper function to call Grok
+  async function tryGrok(): Promise<{ profile: UserProfile | null; error?: string }> {
+    if (!GROK_API_KEY) {
+      return { profile: null, error: 'Grok not configured' };
     }
-    const fallbackProfile = generateFallbackProfile(clientInfo, geo);
-    return { profile: fallbackProfile, source: 'fallback', error: mimoResult.error };
+
+    const startTime = Date.now();
+    try {
+      console.log(`[Grok] Iniciando requisição (timeout: 15s)...`);
+      const response = await fetchWithTimeout(
+        GROK_API_URL,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${GROK_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: 'grok-4-1-fast-reasoning',
+            messages: [
+              { role: 'system', content: systemMessage },
+              { role: 'user', content: prompt }
+            ],
+            stream: false,
+            temperature: 0.5,
+          }),
+        },
+        15000 // 15 second timeout
+      );
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[Grok] Resposta recebida em ${elapsed}ms`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[Grok] Erro da API: ${response.status} - ${errorText.substring(0, 200)}`);
+        return { profile: null, error: `Grok API error: ${response.status}` };
+      }
+
+      const data = await response.json();
+      const text = data.choices?.[0]?.message?.content;
+
+      if (!text) {
+        console.error('[Grok] Resposta vazia');
+        return { profile: null, error: 'Empty Grok response' };
+      }
+
+      const profile = parseAIResponse(text);
+      if (profile) {
+        console.log(`[Grok] Perfil gerado com sucesso em ${Date.now() - startTime}ms`);
+        (profile as UserProfile & { aiGenerated: boolean; aiSource: string }).aiGenerated = true;
+        (profile as UserProfile & { aiSource: string }).aiSource = 'grok';
+        return { profile };
+      }
+
+      return { profile: null, error: 'Failed to parse Grok response' };
+    } catch (err) {
+      const elapsed = Date.now() - startTime;
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error(`[Grok] Erro após ${elapsed}ms:`, errorMsg);
+      return { profile: null, error: errorMsg };
+    }
   }
 
-  // Try Grok first (primary AI)
-  try {
-    const response = await fetch(GROK_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROK_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'grok-4-1-fast-reasoning',
-        messages: [
-          { role: 'system', content: systemMessage },
-          { role: 'user', content: prompt }
-        ],
-        stream: false,
-        temperature: 0.5,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Grok API error:', response.status, errorText);
-
-      // Try MiMo fallback before rule-based
-      const mimoResult = await tryMiMo();
-      if (mimoResult.profile) {
-        await cacheProfile(cacheKey, mimoResult.profile);
-        return { profile: mimoResult.profile, source: 'ai' as const };
-      }
-
-      // Use rule-based fallback if MiMo also fails
-      const fallbackProfile = generateFallbackProfile(clientInfo, geo);
-      return { profile: fallbackProfile, source: 'fallback', error: `Grok: ${response.status}, MiMo: ${mimoResult.error}` };
+  // Try OpenAI first (primary AI)
+  if (OPENAI_API_KEY) {
+    const openaiResult = await tryOpenAI();
+    if (openaiResult.profile) {
+      await cacheProfile(cacheKey, openaiResult.profile);
+      return { profile: openaiResult.profile, source: 'ai' as const };
     }
-
-    const data = await response.json();
-    const text = data.choices?.[0]?.message?.content;
-
-    if (!text) {
-      // Try MiMo fallback
-      const mimoResult = await tryMiMo();
-      if (mimoResult.profile) {
-        await cacheProfile(cacheKey, mimoResult.profile);
-        return { profile: mimoResult.profile, source: 'ai' as const };
-      }
-
-      const fallbackProfile = generateFallbackProfile(clientInfo, geo);
-      return { profile: fallbackProfile, source: 'fallback', error: 'Empty Grok response' };
-    }
-
-    const profile = parseAIResponse(text);
-    if (!profile) {
-      // Try MiMo fallback
-      const mimoResult = await tryMiMo();
-      if (mimoResult.profile) {
-        await cacheProfile(cacheKey, mimoResult.profile);
-        return { profile: mimoResult.profile, source: 'ai' as const };
-      }
-
-      const fallbackProfile = generateFallbackProfile(clientInfo, geo);
-      return { profile: fallbackProfile, source: 'fallback', error: 'Failed to parse Grok response' };
-    }
-
-    // Mark as AI-generated (Grok)
-    (profile as UserProfile & { aiGenerated: boolean; aiSource: string }).aiGenerated = true;
-    (profile as UserProfile & { aiSource: string }).aiSource = 'grok';
-
-    // Cache the result
-    await cacheProfile(cacheKey, profile);
-
-    return { profile, source: 'ai' };
-  } catch (err) {
-    console.error('Grok AI profiling error:', err);
-
-    // Try MiMo fallback before rule-based
-    const mimoResult = await tryMiMo();
-    if (mimoResult.profile) {
-      await cacheProfile(cacheKey, mimoResult.profile);
-      return { profile: mimoResult.profile, source: 'ai' as const };
-    }
-
-    // Use rule-based fallback on any exception
-    const fallbackProfile = generateFallbackProfile(clientInfo, geo);
-    return { profile: fallbackProfile, source: 'fallback', error: `Grok: ${String(err)}, MiMo: ${mimoResult.error}` };
+    console.log('OpenAI falhou, tentando Grok...');
   }
+
+  // Try Grok (fallback 1)
+  if (GROK_API_KEY) {
+    const grokResult = await tryGrok();
+    if (grokResult.profile) {
+      await cacheProfile(cacheKey, grokResult.profile);
+      return { profile: grokResult.profile, source: 'ai' as const };
+    }
+    console.log('Grok falhou, tentando MiMo...');
+  }
+
+  // Try MiMo (fallback 2)
+  const mimoResult = await tryMiMo();
+  if (mimoResult.profile) {
+    await cacheProfile(cacheKey, mimoResult.profile);
+    return { profile: mimoResult.profile, source: 'ai' as const };
+  }
+
+  // Use rule-based fallback if all AIs fail
+  const fallbackProfile = generateFallbackProfile(clientInfo, geo);
+  const errors = [
+    OPENAI_API_KEY ? 'OpenAI falhou' : null,
+    GROK_API_KEY ? 'Grok falhou' : null,
+    OPENROUTER_API_KEY ? `MiMo: ${mimoResult.error}` : null,
+  ].filter(Boolean).join(', ');
+  return { profile: fallbackProfile, source: 'fallback', error: errors || 'No AI configured' };
 }
 
 /**
@@ -1198,92 +1324,206 @@ export async function generateAIAuction(
   const prompt = buildAuctionPrompt(profileSummary, country, countryCode);
   const systemMessage = 'You are an ad auction simulator. Generate realistic RTB bids based on user profiles. Always respond with valid JSON only, no markdown.';
 
-  // Helper to call MiMo
-  async function tryMiMo(): Promise<AIAuctionResult | null> {
-    if (!OPENROUTER_API_KEY) return null;
+  // Helper to call OpenAI
+  async function tryOpenAI(): Promise<AIAuctionResult | null> {
+    if (!OPENAI_API_KEY) return null;
 
+    const startTime = Date.now();
     try {
-      console.log('Leilão IA: Tentando MiMo...');
-      const response = await fetch(OPENROUTER_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://youare.grupomurad.com',
-          'X-Title': 'YouAre - Demonstração de Privacidade',
+      console.log('[Leilão OpenAI] Iniciando requisição (timeout: 30s)...');
+      const response = await fetchWithTimeout(
+        OPENAI_API_URL,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: OPENAI_MODEL,
+            messages: [
+              { role: 'system', content: systemMessage },
+              { role: 'user', content: prompt }
+            ],
+            max_tokens: 4096,
+            temperature: 0.7,
+            response_format: { type: 'json_object' },
+          }),
         },
-        body: JSON.stringify({
-          model: MIMO_MODEL,
-          messages: [
-            { role: 'system', content: systemMessage },
-            { role: 'user', content: prompt }
-          ],
-          max_tokens: 4096,
-          temperature: 0.7,
-        }),
-      });
+        30000 // 30 second timeout
+      );
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[Leilão OpenAI] Resposta recebida em ${elapsed}ms`);
 
       if (!response.ok) {
-        console.error('MiMo auction error:', response.status);
+        const errorText = await response.text();
+        console.error(`[Leilão OpenAI] Erro da API: ${response.status} - ${errorText.substring(0, 200)}`);
         return null;
       }
 
       const data = await response.json();
       const text = data.choices?.[0]?.message?.content;
-      if (!text) return null;
+      if (!text) {
+        console.error('[Leilão OpenAI] Resposta vazia');
+        return null;
+      }
 
       const result = parseAuctionResponse(text);
       if (result) {
-        result.source = 'mimo';
+        result.source = 'openai';
+        console.log(`[Leilão OpenAI] Sucesso em ${Date.now() - startTime}ms`);
         return result;
       }
     } catch (err) {
-      console.error('MiMo auction error:', err);
+      const elapsed = Date.now() - startTime;
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error(`[Leilão OpenAI] Erro após ${elapsed}ms:`, errorMsg);
     }
     return null;
   }
 
-  // Try Grok first
-  if (GROK_API_KEY) {
-    try {
-      console.log('AI Auction: Trying Grok...');
-      const response = await fetch(GROK_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GROK_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: 'grok-4-1-fast-reasoning',
-          messages: [
-            { role: 'system', content: systemMessage },
-            { role: 'user', content: prompt }
-          ],
-          stream: false,
-          temperature: 0.7,
-        }),
-      });
+  // Helper to call Grok
+  async function tryGrok(): Promise<AIAuctionResult | null> {
+    if (!GROK_API_KEY) return null;
 
-      if (response.ok) {
-        const data = await response.json();
-        const text = data.choices?.[0]?.message?.content;
-        if (text) {
-          const result = parseAuctionResponse(text);
-          if (result) {
-            console.log('Leilão IA: Grok sucesso');
-            result.source = 'grok';
-            await setAuctionCache(cacheKey, result);
-            return result;
-          }
-        }
+    const startTime = Date.now();
+    try {
+      console.log('[Leilão Grok] Iniciando requisição (timeout: 15s)...');
+      const response = await fetchWithTimeout(
+        GROK_API_URL,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${GROK_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: 'grok-4-1-fast-reasoning',
+            messages: [
+              { role: 'system', content: systemMessage },
+              { role: 'user', content: prompt }
+            ],
+            stream: false,
+            temperature: 0.7,
+          }),
+        },
+        15000 // 15 second timeout
+      );
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[Leilão Grok] Resposta recebida em ${elapsed}ms`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[Leilão Grok] Erro da API: ${response.status} - ${errorText.substring(0, 200)}`);
+        return null;
       }
-      console.error('Grok auction failed, trying MiMo...');
+
+      const data = await response.json();
+      const text = data.choices?.[0]?.message?.content;
+      if (!text) {
+        console.error('[Leilão Grok] Resposta vazia');
+        return null;
+      }
+
+      const result = parseAuctionResponse(text);
+      if (result) {
+        result.source = 'grok';
+        console.log(`[Leilão Grok] Sucesso em ${Date.now() - startTime}ms`);
+        return result;
+      }
     } catch (err) {
-      console.error('Grok auction error:', err);
+      const elapsed = Date.now() - startTime;
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error(`[Leilão Grok] Erro após ${elapsed}ms:`, errorMsg);
     }
+    return null;
   }
 
-  // Try MiMo fallback
+  // Helper to call MiMo
+  async function tryMiMo(): Promise<AIAuctionResult | null> {
+    if (!OPENROUTER_API_KEY) return null;
+
+    const startTime = Date.now();
+    try {
+      console.log('[Leilão MiMo] Iniciando requisição (timeout: 15s)...');
+      const response = await fetchWithTimeout(
+        OPENROUTER_API_URL,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+            'HTTP-Referer': 'https://youare.grupomurad.com',
+            'X-Title': 'YouAre - Demonstração de Privacidade',
+          },
+          body: JSON.stringify({
+            model: MIMO_MODEL,
+            messages: [
+              { role: 'system', content: systemMessage },
+              { role: 'user', content: prompt }
+            ],
+            max_tokens: 4096,
+            temperature: 0.7,
+          }),
+        },
+        15000 // 15 second timeout
+      );
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[Leilão MiMo] Resposta recebida em ${elapsed}ms`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[Leilão MiMo] Erro da API: ${response.status} - ${errorText.substring(0, 200)}`);
+        return null;
+      }
+
+      const data = await response.json();
+      const text = data.choices?.[0]?.message?.content;
+      if (!text) {
+        console.error('[Leilão MiMo] Resposta vazia');
+        return null;
+      }
+
+      const result = parseAuctionResponse(text);
+      if (result) {
+        result.source = 'mimo';
+        console.log(`[Leilão MiMo] Sucesso em ${Date.now() - startTime}ms`);
+        return result;
+      }
+    } catch (err) {
+      const elapsed = Date.now() - startTime;
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error(`[Leilão MiMo] Erro após ${elapsed}ms:`, errorMsg);
+    }
+    return null;
+  }
+
+  // Try OpenAI first (primary AI)
+  if (OPENAI_API_KEY) {
+    const openaiResult = await tryOpenAI();
+    if (openaiResult) {
+      console.log('Leilão IA: OpenAI sucesso');
+      await setAuctionCache(cacheKey, openaiResult);
+      return openaiResult;
+    }
+    console.log('Leilão IA: OpenAI falhou, tentando Grok...');
+  }
+
+  // Try Grok (fallback 1)
+  if (GROK_API_KEY) {
+    const grokResult = await tryGrok();
+    if (grokResult) {
+      console.log('Leilão IA: Grok sucesso');
+      await setAuctionCache(cacheKey, grokResult);
+      return grokResult;
+    }
+    console.log('Leilão IA: Grok falhou, tentando MiMo...');
+  }
+
+  // Try MiMo (fallback 2)
   const mimoResult = await tryMiMo();
   if (mimoResult) {
     console.log('Leilão IA: MiMo sucesso');

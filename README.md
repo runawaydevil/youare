@@ -10,7 +10,7 @@ Uma demonstração de conscientização sobre privacidade que mostra quais infor
 - **Rastreamento Cross-Browser**: Identificação baseada em hardware que funciona entre diferentes navegadores
 - **Rastreamento de Comportamento em Tempo Real**: Movimentos do mouse, padrões de scroll, comportamento de digitação
 - **Detecção de Dispositivo**: GPU, núcleos da CPU, RAM, resolução da tela
-- **Perfil com IA**: Usa Grok AI para inferir detalhes pessoais a partir de dados de fingerprint
+- **Perfil com IA**: Usa OpenAI (GPT-4) como primário, com fallback para Grok e MiMo para inferir detalhes pessoais a partir de dados de fingerprint
 - **Globo 3D Interativo**: Veja outros visitantes em tempo real com CesiumJS
 - **Detecção de Privacidade**: VPN, bloqueador de anúncios, detecção de modo anônimo
 
@@ -20,7 +20,7 @@ Uma demonstração de conscientização sobre privacidade que mostra quais infor
 - **Backend**: Bun + Hono
 - **Tempo Real**: WebSocket
 - **Globo**: CesiumJS com tiles do OpenStreetMap
-- **IA**: Grok (X.AI) para perfil de usuário (opcional)
+- **IA**: OpenAI (GPT-4) como primário, Grok (X.AI) e MiMo (OpenRouter) como fallbacks para perfil de usuário (opcional)
 - **Cache**: Redis para cache de perfis e rastreamento de visitantes únicos (opcional)
 
 ## Começando
@@ -29,7 +29,9 @@ Uma demonstração de conscientização sobre privacidade que mostra quais infor
 
 - Runtime [Bun](https://bun.sh/)
 - Redis (opcional, para cache)
-- Chave da API Grok (opcional, para perfil com IA)
+- Chave da API OpenAI (opcional, para perfil com IA - primário)
+- Chave da API Grok (opcional, fallback)
+- Chave da API OpenRouter (opcional, fallback)
 
 ### Instalação
 
@@ -68,10 +70,13 @@ bun run server/index.ts
 
 | Variável | Descrição | Obrigatório |
 |----------|-----------|-------------|
-| `PORT` | Porta do servidor backend | Sim |
-| `VITE_WS_PORT` | Porta WebSocket para dev | Sim |
+| `PORT` | Porta do servidor backend (padrão: 9945) | Sim |
+| `VITE_WS_PORT` | Porta WebSocket para dev (padrão: 9945) | Sim |
 | `REDIS_URL` | URL de conexão Redis | Não |
-| `GROK_API_KEY` | Chave da API Grok para perfil com IA | Não |
+| `OPENAI_API_KEY` | Chave da API OpenAI para perfil com IA (primário) | Não |
+| `OPENAI_MODEL` | Modelo OpenAI a usar (padrão: gpt-4-turbo-preview) | Não |
+| `GROK_API_KEY` | Chave da API Grok para perfil com IA (fallback) | Não |
+| `OPENROUTER_API_KEY` | Chave da API OpenRouter para perfil com IA (fallback) | Não |
 
 ## Quais Informações São Coletadas
 

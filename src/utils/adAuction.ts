@@ -264,8 +264,33 @@ export async function runAIAuction(visitor: VisitorInfo): Promise<AuctionResult>
 
     if (response.ok) {
       const data = await response.json();
-      if (data.bids && data.bids.length > 0) {
-        return processAIResponse(data, auctionId, auctionStart);
+      console.log('AI Auction response:', { source: data.source, aiPowered: data.aiPowered, bidsCount: data.bids?.length });
+      
+      // Check if AI actually responded (source is not 'fallback' and aiPowered is explicitly true or source indicates AI)
+      const isAIPowered = (data.aiPowered === true) || (data.source && data.source !== 'fallback' && ['openai', 'grok', 'mimo'].includes(data.source));
+      
+      if (isAIPowered) {
+        // AI responded - process even if bids array is empty
+        if (data.bids && Array.isArray(data.bids) && data.bids.length > 0) {
+          const result = processAIResponse(data, auctionId, auctionStart);
+          result.aiPowered = true; // Ensure it's marked as AI-powered
+          console.log('Processed auction result:', { aiPowered: result.aiPowered, source: data.source, bidsCount: result.bids.length });
+          return result;
+        } else {
+          // AI responded but with no bids - return empty result but mark as AI-powered
+          console.log('AI responded with no bids, returning empty AI-powered result');
+          return {
+            auctionId,
+            timestamp: auctionStart,
+            duration: Date.now() - auctionStart,
+            bids: [],
+            winner: null,
+            totalBidders: 0,
+            userValueBreakdown: data.valueFactors || [],
+            isSimulated: true,
+            aiPowered: true,
+          };
+        }
       }
     }
   } catch (error) {

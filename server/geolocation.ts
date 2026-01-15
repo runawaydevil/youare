@@ -31,12 +31,85 @@ async function initReader(): Promise<Reader | null> {
 initReader();
 
 /**
+ * Generate a deterministic hash from a string identifier
+ */
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * Generate unique coordinates from an identifier hash
+ * Ensures each identifier gets a consistent but unique location on the globe
+ * Uses a better distribution algorithm to avoid clustering and ensure realistic spread
+ */
+function generateLocationFromHash(identifier: string): { lat: number; lng: number } {
+  const hash = hashString(identifier);
+  // Use different parts of the hash for lat and lng to ensure good distribution
+  // Split hash into two parts for better distribution
+  const hash1 = hash & 0xFFFF; // Lower 16 bits
+  const hash2 = (hash >> 16) & 0xFFFF; // Upper 16 bits
+  
+  // Generate lat/lng with better distribution
+  // Use modulo to ensure valid ranges
+  const lat = ((hash1 % 180) - 90); // -90 to 90 (latitude)
+  const lng = ((hash2 % 360) - 180); // -180 to 180 (longitude)
+  
+  // Ensure coordinates are valid numbers
+  if (isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
+    console.error(`[Geolocation] Invalid coordinates generated for ${identifier}: lat=${lat}, lng=${lng}`);
+    return { lat: 0, lng: 0 };
+  }
+  
+  console.log(`[Geolocation] Generated location for ${identifier}: lat=${lat}, lng=${lng} (hash=${hash}, hash1=${hash1}, hash2=${hash2})`);
+  
+  return { lat, lng };
+}
+
+/**
  * Look up geolocation data for an IP address
  * Uses local MaxMind database - no rate limits!
  */
-export async function getGeolocation(ip: string): Promise<GeoLocation | null> {
-  // Skip localhost/private IPs
+export async function getGeolocation(ip: string, identifier?: string): Promise<GeoLocation | null> {
+  // Skip localhost/private IPs (but log for debugging)
   if (isPrivateIP(ip)) {
+    console.log(`[Geolocation] Skipping private IP: ${ip}`);
+    // For development, return a unique location based on identifier hash
+    if (process.env.NODE_ENV !== 'production') {
+      if (identifier) {
+        const { lat, lng } = generateLocationFromHash(identifier);
+        return {
+          lat,
+          lng,
+          city: 'Local',
+          region: 'Development',
+          country: 'Unknown',
+          countryCode: 'XX',
+          timezone: 'UTC',
+          isp: 'Local Network',
+          org: 'Development',
+          as: 'Unknown',
+        };
+      }
+      // Fallback to (0, 0) if no identifier provided
+      return {
+        lat: 0,
+        lng: 0,
+        city: 'Local',
+        region: 'Development',
+        country: 'Unknown',
+        countryCode: 'XX',
+        timezone: 'UTC',
+        isp: 'Local Network',
+        org: 'Development',
+        as: 'Unknown',
+      };
+    }
     return null;
   }
 

@@ -13,7 +13,7 @@ import type { VisitorInfo } from './types';
 import './App.css';
 
 export default function App() {
-  const { connected, visitors, currentVisitor, aiLoading, aiCreditsExhausted, totalUniqueVisitors } = useWebSocket();
+  const { connected, visitors, currentVisitor, aiLoading, totalUniqueVisitors } = useWebSocket();
   const [selectedVisitorId, setSelectedVisitorId] = useState<string | null>(null);
 
   // Get the selected visitor from the visitors array (always up-to-date)
@@ -63,15 +63,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* AI Credits Exhausted Banner */}
-      {aiCreditsExhausted && (
-        <div className="ai-credits-banner">
-          <span className="banner-icon">:(</span>
-          <span className="banner-text">
-            Créditos de IA esgotados! O sistema está usando análise baseada em regras.
-          </span>
-        </div>
-      )}
+      {/* AI Credits Exhausted Banner - Removed: Leilão já mostra mensagens de erro quando necessário */}
 
       {/* Left Panel - Ad Auction */}
       <aside className="left-panel">
